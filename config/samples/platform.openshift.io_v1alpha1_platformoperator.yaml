@@ -1,0 +1,6 @@
+apiVersion: platform.openshift.io/v1alpha1
+kind: PlatformOperator
+metadata:
+  name: platformoperator-sample
+spec:
+  packageName: combo
