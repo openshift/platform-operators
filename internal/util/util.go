@@ -4,14 +4,14 @@ import (
 	"context"
 	"time"
 
+	rukpakv1alpha1 "github.com/operator-framework/rukpak/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	rukpakv1alpha1 "github.com/operator-framework/rukpak/api/v1alpha1"
-	platformv1alpha1 "github.com/timflannagan/platform-operators/api/v1alpha1"
+	platformv1alpha1 "github.com/openshift/platform-operators/api/v1alpha1"
 )
 
 var (
@@ -37,9 +37,9 @@ func RequeuePlatformOperators(cl client.Client) handler.MapFunc {
 	}
 }
 
-func RequeueBundleInstance(c client.Client) handler.MapFunc {
+func RequeueBundleDeployment(c client.Client) handler.MapFunc {
 	return func(obj client.Object) []reconcile.Request {
-		bi := obj.(*rukpakv1alpha1.BundleInstance)
+		bi := obj.(*rukpakv1alpha1.BundleDeployment)
 
 		poList := &platformv1alpha1.PlatformOperatorList{}
 		if err := c.List(context.Background(), poList); err != nil {

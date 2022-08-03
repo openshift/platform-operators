@@ -2,21 +2,18 @@ package sourcer
 
 import (
 	"context"
-	"encoding/json"
-	"errors"
 	"fmt"
 
+	operatorsv1alpha1 "github.com/operator-framework/api/pkg/operators/v1alpha1"
+	registryClient "github.com/operator-framework/operator-registry/pkg/client"
 	utilerror "k8s.io/apimachinery/pkg/util/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	operatorsv1alpha1 "github.com/operator-framework/api/pkg/operators/v1alpha1"
-	deppyv1alpha1 "github.com/operator-framework/deppy/api/v1alpha1"
-	registryproperty "github.com/operator-framework/operator-registry/alpha/property"
-	registryClient "github.com/operator-framework/operator-registry/pkg/client"
+	platformv1alpha1 "github.com/openshift/platform-operators/api/v1alpha1"
 )
 
-var (
-	ErrNoCandidates = errors.New("failed to find any catalog candidates")
+const (
+	channelName = "4.12"
 )
 
 type catalogSource struct {
@@ -29,7 +26,7 @@ func NewCatalogSourceHandler(c client.Client) Sourcer {
 	}
 }
 
-func (cs catalogSource) Source(ctx context.Context) ([]Bundle, error) {
+func (cs catalogSource) Source(ctx context.Context, po *platformv1alpha1.PlatformOperator) (*Bundle, error) {
 	css := &operatorsv1alpha1.CatalogSourceList{}
 	if err := cs.List(ctx, css); err != nil {
 		return nil, err
@@ -39,17 +36,22 @@ func (cs catalogSource) Source(ctx context.Context) ([]Bundle, error) {
 	}
 	sources := sources(css.Items)
 
-	candidates, err := sources.Filter(byConnectionReadiness).GetCandidates(ctx)
+	candidates, err := sources.Filter(byConnectionReadiness).GetCandidates(ctx, po)
 	if err != nil {
 		return nil, err
 	}
 	if len(candidates) == 0 {
-		return nil, ErrNoCandidates
+		return nil, fmt.Errorf("failed to find candidate olm.bundles from the %s package", po.Spec.PackageName)
 	}
-	return candidates, nil
+	latestBundle, err := candidates.Latest()
+	if err != nil {
+		return nil, err
+	}
+
+	return latestBundle, nil
 }
 
-func (s sources) GetCandidates(ctx context.Context) ([]Bundle, error) {
+func (s sources) GetCandidates(ctx context.Context, po *platformv1alpha1.PlatformOperator) (bundles, error) {
 	var (
 		errors     []error
 		candidates bundles
@@ -70,47 +72,14 @@ func (s sources) GetCandidates(ctx context.Context) ([]Bundle, error) {
 			continue
 		}
 		for b := it.Next(); b != nil; b = it.Next() {
-			properties := []deppyv1alpha1.Property{}
-			for _, property := range b.GetProperties() {
-				var value map[string]string
-
-				switch property.Type {
-				case registryproperty.TypePackage:
-					var p registryproperty.Package
-					if err := json.Unmarshal(json.RawMessage(property.Value), &p); err != nil {
-						return nil, fmt.Errorf("failed to parse the %s/%v bundle property: %w", property.Type, property.Value, err)
-					}
-					value = map[string]string{
-						"package": p.PackageName,
-						"version": p.Version,
-					}
-				case registryproperty.TypeGVK:
-					var v registryproperty.GVK
-					if err := json.Unmarshal(json.RawMessage(property.Value), &v); err != nil {
-						return nil, fmt.Errorf("failed to parse the %s/%v bundle property: %w", property.Type, property.Value, err)
-					}
-					value = map[string]string{
-						"group":   v.Group,
-						"kind":    v.Kind,
-						"version": v.Version,
-					}
-				default:
-					// avoid handling unknown property types
-					continue
-				}
-				properties = append(properties, deppyv1alpha1.Property{Type: property.Type, Value: value})
+			if b.PackageName != po.Spec.PackageName || b.ChannelName != channelName {
+				continue
 			}
 			candidates = append(candidates, Bundle{
-				Name:            b.GetCsvName(),
-				PackageName:     b.GetPackageName(),
-				ChannelName:     b.GetChannelName(),
-				Version:         b.GetVersion(),
-				Image:           b.GetBundlePath(),
-				Skips:           b.GetSkips(),
-				Replaces:        b.GetReplaces(),
-				SourceName:      cs.GetName(),
-				SourceNamespace: cs.GetNamespace(),
-				Properties:      properties,
+				Version:  b.GetVersion(),
+				Image:    b.GetBundlePath(),
+				Skips:    b.GetSkips(),
+				Replaces: b.GetReplaces(),
 			})
 		}
 	}

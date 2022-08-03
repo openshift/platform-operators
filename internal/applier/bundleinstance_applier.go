@@ -3,13 +3,13 @@ package applier
 import (
 	"context"
 
+	rukpakv1alpha1 "github.com/operator-framework/rukpak/api/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
-	rukpakv1alpha1 "github.com/operator-framework/rukpak/api/v1alpha1"
-	"github.com/timflannagan/platform-operators/api/v1alpha1"
-	"github.com/timflannagan/platform-operators/internal/sourcer"
+	"github.com/openshift/platform-operators/api/v1alpha1"
+	"github.com/openshift/platform-operators/internal/sourcer"
 )
 
 const (
@@ -17,32 +17,32 @@ const (
 	registryProvisionerID = "core.rukpak.io/registry"
 )
 
-type biApplier struct {
+type bdApplier struct {
 	client.Client
 }
 
-func NewBundleInstanceHandler(c client.Client) Applier {
-	return &biApplier{
+func NewBundleDeploymentHandler(c client.Client) Applier {
+	return &bdApplier{
 		Client: c,
 	}
 }
 
-func (a *biApplier) Apply(ctx context.Context, po *v1alpha1.PlatformOperator, b *sourcer.Bundle) error {
-	bi := &rukpakv1alpha1.BundleInstance{}
+func (a *bdApplier) Apply(ctx context.Context, po *v1alpha1.PlatformOperator, b *sourcer.Bundle) error {
+	bi := &rukpakv1alpha1.BundleDeployment{}
 	bi.SetName(po.GetName())
 	controllerRef := metav1.NewControllerRef(po, po.GroupVersionKind())
 
 	_, err := controllerutil.CreateOrUpdate(ctx, a.Client, bi, func() error {
 		bi.SetOwnerReferences([]metav1.OwnerReference{*controllerRef})
-		bi.Spec = *buildBundleInstance(b.Image)
+		bi.Spec = *buildBundleDeployment(b.Image)
 		return nil
 	})
 	return err
 }
 
-// buildBundleInstance is responsible for taking a name and image to create an embedded BundleInstance
-func buildBundleInstance(image string) *rukpakv1alpha1.BundleInstanceSpec {
-	return &rukpakv1alpha1.BundleInstanceSpec{
+// buildBundleDeployment is responsible for taking a name and image to create an embedded BundleDeployment
+func buildBundleDeployment(image string) *rukpakv1alpha1.BundleDeploymentSpec {
+	return &rukpakv1alpha1.BundleDeploymentSpec{
 		ProvisionerClassName: plainProvisionerID,
 		// TODO(tflannag): Investigate why the metadata key is empty when this
 		// resource has been created on cluster despite the field being omitempty.

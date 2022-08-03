@@ -2,7 +2,6 @@ package sourcer
 
 import (
 	"github.com/blang/semver/v4"
-
 	operatorsv1alpha1 "github.com/operator-framework/api/pkg/operators/v1alpha1"
 )
 

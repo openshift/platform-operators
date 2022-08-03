@@ -1,44 +1,61 @@
+/*
+Copyright 2022.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package controllers
 
 import (
 	"context"
 
+	operatorsv1alpha1 "github.com/operator-framework/api/pkg/operators/v1alpha1"
+	rukpakv1alpha1 "github.com/operator-framework/rukpak/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	logr "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
-	deppyv1alpha1 "github.com/operator-framework/deppy/api/v1alpha1"
-	platformv1alpha1 "github.com/timflannagan/platform-operators/api/v1alpha1"
-	"github.com/timflannagan/platform-operators/internal/util"
+	platformv1alpha1 "github.com/openshift/platform-operators/api/v1alpha1"
+	"github.com/openshift/platform-operators/internal/applier"
+	"github.com/openshift/platform-operators/internal/sourcer"
+	"github.com/openshift/platform-operators/internal/util"
 )
 
 // PlatformOperatorReconciler reconciles a PlatformOperator object
 type PlatformOperatorReconciler struct {
 	client.Client
-	Scheme *runtime.Scheme
+	Sourcer sourcer.Sourcer
+	Applier applier.Applier
+	Scheme  *runtime.Scheme
 }
-
-const (
-	packageConstraintType = "olm.RequirePackage"
-	packageValueKey       = "package"
-)
 
 //+kubebuilder:rbac:groups=platform.openshift.io,resources=platformoperators,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=platform.openshift.io,resources=platformoperators/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=platform.openshift.io,resources=platformoperators/finalizers,verbs=update
-//+kubebuilder:rbac:groups=core.deppy.io,resources=resolutions,verbs=get;list;watch;update;patch
+//+kubebuilder:rbac:groups=operators.coreos.com,resources=catalogsources,verbs=get;list;watch
+//+kubebuilder:rbac:groups=core.rukpak.io,resources=bundledeployments,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=core.rukpak.io,resources=bundles,verbs=get;list;watch;create;update;patch;delete
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
 //
 // For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.11.2/pkg/reconcile
+// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.10.0/pkg/reconcile
 func (r *PlatformOperatorReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := logr.FromContext(ctx)
 	log.Info("reconciling request", "req", req.NamespacedName)
@@ -57,76 +74,46 @@ func (r *PlatformOperatorReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		}
 	}()
 
-	res, err := r.ensureResolution(ctx, po)
+	desiredBundle, err := r.Sourcer.Source(ctx, po)
 	if err != nil {
 		meta.SetStatusCondition(&po.Status.Conditions, metav1.Condition{
 			Type:    platformv1alpha1.TypeSourced,
-			Status:  metav1.ConditionFalse,
+			Status:  metav1.ConditionUnknown,
 			Reason:  platformv1alpha1.ReasonSourceFailed,
 			Message: err.Error(),
 		})
 		return ctrl.Result{}, err
 	}
-	cond := meta.FindStatusCondition(res.Status.Conditions, "Resolved")
-	if cond == nil {
-		// assume that we recently created the resolution resource, and let
-		// the watcher requeue this for us
-		return ctrl.Result{}, nil
-	}
-	// check whether the resolution failed and bubble up that information
-	// to the platform-operator's singleton resource
-	if cond.Status != metav1.ConditionTrue {
-		meta.SetStatusCondition(&po.Status.Conditions, metav1.Condition{
-			Type:    platformv1alpha1.TypeSourced,
-			Status:  cond.Status,
-			Reason:  cond.Reason,
-			Message: cond.Message,
-		})
-		// TODO: should we be returning nil here? I _think_ it's fine for now,
-		// as we have a watcher on that resolution API.
-		return ctrl.Result{}, nil
-	}
 	meta.SetStatusCondition(&po.Status.Conditions, metav1.Condition{
 		Type:    platformv1alpha1.TypeSourced,
 		Status:  metav1.ConditionTrue,
 		Reason:  platformv1alpha1.ReasonSourceSuccessful,
-		Message: "Successfully sourced package candidates",
+		Message: "Successfully sourced the desired olm.bundle content",
 	})
 
-	return ctrl.Result{}, nil
-}
-
-func (r *PlatformOperatorReconciler) ensureResolution(ctx context.Context, po *platformv1alpha1.PlatformOperator) (*deppyv1alpha1.Resolution, error) {
-	res := &deppyv1alpha1.Resolution{}
-	res.SetName(po.GetName())
-	controllerRef := metav1.NewControllerRef(po, po.GroupVersionKind())
-
-	_, err := controllerutil.CreateOrUpdate(ctx, r.Client, res, func() error {
-		res.SetOwnerReferences([]metav1.OwnerReference{*controllerRef})
-		desiredPackages := make([]deppyv1alpha1.Constraint, 0)
-		for _, name := range po.Spec.Packages {
-			desiredPackages = append(desiredPackages, newPackageRequirement(name))
-		}
-		// TODO: sort these packages to ensure determinism
-		res.Spec.Constraints = desiredPackages
-		return nil
-	})
-	return res, err
-}
-
-func newPackageRequirement(packageName string) deppyv1alpha1.Constraint {
-	return deppyv1alpha1.Constraint{
-		Type: packageConstraintType,
-		Value: map[string]string{
-			packageValueKey: packageName,
-		},
+	if err := r.Applier.Apply(ctx, po, desiredBundle); err != nil {
+		meta.SetStatusCondition(&po.Status.Conditions, metav1.Condition{
+			Type:    platformv1alpha1.TypeApplied,
+			Status:  metav1.ConditionUnknown,
+			Reason:  platformv1alpha1.ReasonApplyFailed,
+			Message: err.Error(),
+		})
+		return ctrl.Result{}, err
 	}
+	meta.SetStatusCondition(&po.Status.Conditions, metav1.Condition{
+		Type:    platformv1alpha1.TypeApplied,
+		Status:  metav1.ConditionTrue,
+		Reason:  platformv1alpha1.ReasonApplySuccessful,
+		Message: "Successfully applied the desired olm.bundle content",
+	})
+	return ctrl.Result{}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *PlatformOperatorReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&platformv1alpha1.PlatformOperator{}).
-		Watches(&source.Kind{Type: &deppyv1alpha1.Resolution{}}, handler.EnqueueRequestsFromMapFunc(util.RequeuePlatformOperators(r.Client))).
+		Watches(&source.Kind{Type: &operatorsv1alpha1.CatalogSource{}}, handler.EnqueueRequestsFromMapFunc(util.RequeuePlatformOperators(mgr.GetClient()))).
+		Watches(&source.Kind{Type: &rukpakv1alpha1.BundleDeployment{}}, handler.EnqueueRequestsFromMapFunc(util.RequeueBundleDeployment(mgr.GetClient()))).
 		Complete(r)
 }

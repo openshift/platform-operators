@@ -38,14 +38,13 @@ spec:
           spec:
             description: PlatformOperatorSpec defines the desired state of PlatformOperator
             properties:
-              packages:
-                description: Packages is the desired set of platform operator package
-                  names that should be managed on the cluster.
-                items:
-                  type: string
-                type: array
+              packageName:
+                description: PackageName specifies the name of the package to be installed
+                  from the provided CatalogSource. PackageName is required and must
+                  equal the exact name of the package in the catalog.
+                type: string
             required:
-            - packages
+            - packageName
             type: object
           status:
             description: PlatformOperatorStatus defines the observed state of PlatformOperator

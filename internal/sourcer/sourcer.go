@@ -4,26 +4,20 @@ import (
 	"context"
 	"fmt"
 
-	deppyv1alpha1 "github.com/operator-framework/deppy/api/v1alpha1"
+	platformv1alpha1 "github.com/openshift/platform-operators/api/v1alpha1"
 )
 
 type Bundle struct {
-	Name            string
-	PackageName     string
-	ChannelName     string
-	Version         string
-	Image           string
-	Replaces        string
-	Skips           []string
-	SourceName      string
-	SourceNamespace string
-	Properties      []deppyv1alpha1.Property
+	Version  string
+	Image    string
+	Replaces string
+	Skips    []string
 }
 
 func (b Bundle) String() string {
-	return fmt.Sprintf("Name: %s; Package: %s; Channel: %s; Version: %s; Image: %s; Replaces: %s", b.Name, b.PackageName, b.ChannelName, b.Version, b.Image, b.Replaces)
+	return fmt.Sprintf("Version: %s; Image: %s; Replaces %s", b.Version, b.Image, b.Replaces)
 }
 
 type Sourcer interface {
-	Source(context.Context) ([]Bundle, error)
+	Source(context.Context, *platformv1alpha1.PlatformOperator) (*Bundle, error)
 }
