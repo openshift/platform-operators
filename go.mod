@@ -7,7 +7,6 @@ require (
 	github.com/onsi/ginkgo/v2 v2.1.4
 	github.com/onsi/gomega v1.19.0
 	github.com/operator-framework/api v0.15.0
-	github.com/operator-framework/deppy v0.0.0-20220624185330-db87eb0e11e9
 	github.com/operator-framework/operator-registry v1.22.1
 	github.com/operator-framework/rukpak v0.7.0
 	k8s.io/api v0.24.1
