@@ -413,8 +413,6 @@ github.com/onsi/gomega v1.19.0/go.mod h1:LY+I3pBVzYsTBU1AnDwOSxaYi9WoWiqgwooUqq9
 github.com/opentracing/opentracing-go v1.1.0/go.mod h1:UkNAQd3GIcIGf0SeVgPpRdFStlNbqXla1AfSYxPUl2o=
 github.com/operator-framework/api v0.15.0 h1:4f9i0drtqHj7ykLoHxv92GR43S7MmQHhmFQkfm5YaGI=
 github.com/operator-framework/api v0.15.0/go.mod h1:scnY9xqSeCsOdtJtNoHIXd7OtHZ14gj1hkDA4+DlgLY=
-github.com/operator-framework/deppy v0.0.0-20220624185330-db87eb0e11e9 h1:JeX++QZOUL5JtZOXmhsL/jwVTrXKRcQ/UPWUZv6XTAQ=
-github.com/operator-framework/deppy v0.0.0-20220624185330-db87eb0e11e9/go.mod h1:Oqhn5Lxyv8org2cpi2KEiuSlxrjTaQhAWYn/K/94y1M=
 github.com/operator-framework/operator-registry v1.22.1 h1:myPsCo2Iyd5mRnm8Lwh1mEKeGfmuXO4fkeU9qB59dnE=
 github.com/operator-framework/operator-registry v1.22.1/go.mod h1:qDxBCYPeOMlOXd95Zi1q4GpiKwK9i9Mag1AkrMOoFNU=
 github.com/operator-framework/rukpak v0.7.0 h1:ZzjeZjDPkhTZ5whm18W5TiH0x6XdFxuhc9DndBKc44o=
