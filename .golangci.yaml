@@ -42,7 +42,7 @@ linters-settings:
       - github.com/onsi/gomega
       - github.com/onsi/ginkgo
   goimports:
-    local-prefixes: github.com/operator-framework/api,github.com/operator-framework/operator-registry
+    local-prefixes: github.com/openshift/platform-operators
 
 output:
   format: tab
