@@ -6,6 +6,7 @@ ENVTEST_K8S_VERSION = 1.22
 BIN_DIR := bin
 CONTAINER_RUNTIME ?= docker
 KIND_CLUSTER_NAME ?= kind
+GO_INSTALL_OPTS ?= "-mod=readonly"
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
@@ -105,7 +106,6 @@ install: generate kustomize ## Install CRDs into the K8s cluster specified in ~/
 uninstall: generate kustomize ## Uninstall CRDs from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
 	$(KUSTOMIZE) build config/crd | kubectl delete --ignore-not-found=$(ignore-not-found) -f -
 
-
 .PHONY: run
 run: build-container kind-cluster kind-load install
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
@@ -138,8 +138,12 @@ GOLANGCI_LINT ?= $(LOCALBIN)/golangci-lint
 KIND ?= $(LOCALBIN)/kind
 
 ## Tool Versions
-KUSTOMIZE_VERSION ?= v4.5.6
+KUSTOMIZE_VERSION ?= v3.8.7
 CONTROLLER_TOOLS_VERSION ?= v0.9.0
+ENVTEST_VERSION ?= latest
+GINKGO_VERSION ?= v2.1.4
+GOLANGCI_LINT_VERSION ?= v1.45.2
+KIND_VERSION ?= v0.14.0
 
 KUSTOMIZE_INSTALL_SCRIPT ?= "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"
 .PHONY: kustomize
@@ -151,44 +155,24 @@ $(KUSTOMIZE): $(LOCALBIN)
 .PHONY: controller-gen
 controller-gen: $(CONTROLLER_GEN) ## Download controller-gen locally if necessary.
 $(CONTROLLER_GEN): $(LOCALBIN)
-	GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-tools/cmd/controller-gen@$(CONTROLLER_TOOLS_VERSION)
+	GOBIN=$(LOCALBIN) go install $(GO_INSTALL_OPTS) sigs.k8s.io/controller-tools/cmd/controller-gen@$(CONTROLLER_TOOLS_VERSION)
 
 .PHONY: envtest
 envtest: $(ENVTEST) ## Download envtest-setup locally if necessary.
 $(ENVTEST): $(LOCALBIN)
-	GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
+	GOBIN=$(LOCALBIN) go install $(GO_INSTALL_OPTS) sigs.k8s.io/controller-runtime/tools/setup-envtest@$(ENVTEST_VERSION)
 
 .PHONY: ginkgo
 ginkgo: $(GINKGO)
 $(GINKGO): $(LOCALBIN) ## Download ginkgo locally if necessary.
-	GOBIN=$(LOCALBIN) go install github.com/onsi/ginkgo/v2/ginkgo@v2.1.4
+	GOBIN=$(LOCALBIN) go install $(GO_INSTALL_OPTS) github.com/onsi/ginkgo/v2/ginkgo@$(GINKGO_VERSION)
 
 .PHONY: golangci-lint
 golangci-lint: $(GOLANGCI_LINT)
 $(GOLANGCI_LINT): $(LOCALBIN) ## Download golangci-lint locally if necessary.
-	GOBIN=$(LOCALBIN) go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.45.2
-
-RUKPAK_VERSION=v0.5.0
-CERT_MGR_VERSION=v1.7.1
+	GOBIN=$(LOCALBIN) go install $(GO_INSTALL_OPTS) github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION)
 
 .PHONY: kind
 kind: $(KIND) ## Download kind locally if necessary.
 $(KIND): $(LOCALBIN)
-	GOBIN=$(LOCALBIN) go install sigs.k8s.io/kind@v0.14.0
-
-.PHONY: rukpak
-rukpak:
-	kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/$(CERT_MGR_VERSION)/cert-manager.yaml
-	kubectl wait --for=condition=Available --namespace=cert-manager deployment/cert-manager-webhook --timeout=60s
-	kubectl apply -f https://github.com/operator-framework/rukpak/releases/download/$(RUKPAK_VERSION)/rukpak.yaml
-
-OLM_VERSION ?= v0.21.2
-.PHONY: olm
-olm:   ## Install OLM locally
-	# TODO(tflannag): Deploy a BundleDeployment using the OLM plain bundle image
-	kubectl apply --server-side=true -f https://github.com/operator-framework/operator-lifecycle-manager/releases/download/$(OLM_VERSION)/crds.yaml
-	# Wait for CRDs to be accepted before proceeding
-	kubectl wait --for=condition=NamesAccepted crd/catalogsources.operators.coreos.com crd/clusterserviceversions.operators.coreos.com \
-	crd/installplans.operators.coreos.com crd/olmconfigs.operators.coreos.com crd/operatorconditions.operators.coreos.com \
-	crd/operatorgroups.operators.coreos.com crd/operators.operators.coreos.com crd/subscriptions.operators.coreos.com --timeout=60s
-	kubectl apply --server-side=true -f https://github.com/operator-framework/operator-lifecycle-manager/releases/download/$(OLM_VERSION)/olm.yaml
+	GOBIN=$(LOCALBIN) go install $(GO_INSTALL_OPTS) sigs.k8s.io/kind@$(KIND_VERSION)
