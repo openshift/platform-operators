@@ -159,7 +159,7 @@ var _ = Describe("platform operators controller", func() {
 					if err := c.Get(ctx, types.NamespacedName{Name: po.GetName()}, bi); err != nil {
 						return nil, err
 					}
-					if bi.Status.InstalledBundleName == "" {
+					if bi.Status.ActiveBundle == "" {
 						return nil, fmt.Errorf("waiting for bundle name to be populated")
 					}
 					return meta.FindStatusCondition(bi.Status.Conditions, rukpakv1alpha1.TypeInstalled), nil
