@@ -52,7 +52,9 @@ generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and
 .PHONY: lint
 lint: ## Run golangci-lint linter checks.
 lint: golangci-lint
-	$(GOLANGCI_LINT) run
+	@# Set the golangci-lint cache directory to a directory that's
+	@# writable in downstream CI.
+	GOLANGCI_LINT_CACHE=/tmp/golangci-cache $(GOLANGCI_LINT) run
 
 UNIT_TEST_DIRS=$(shell go list ./... | grep -v /test/)
 .PHONY: unit
