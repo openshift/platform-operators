@@ -5,8 +5,10 @@ IMG ?= controller:latest
 ENVTEST_K8S_VERSION = 1.22
 BIN_DIR := bin
 CONTAINER_RUNTIME ?= docker
+KUBECTL ?= kubectl
 KIND_CLUSTER_NAME ?= kind
 GO_INSTALL_OPTS ?= "-mod=readonly"
+TMP_DIR := $(shell mktemp -d -t manifests-$(date +%Y-%m-%d-%H-%M-%S)-XXXXXXXXXX)
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
@@ -49,6 +51,34 @@ generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and
 	$(CONTROLLER_GEN) object:headerFile=./hack/boilerplate.go.txt paths=./api/...
 	$(CONTROLLER_GEN) rbac:roleName=manager-role paths=./... output:rbac:artifacts:config=config/rbac
 
+RBAC_LIST = rbac.authorization.k8s.io_v1_clusterrole_platform-operators-manager-role.yaml \
+	rbac.authorization.k8s.io_v1_clusterrole_platform-operators-metrics-reader.yaml \
+	rbac.authorization.k8s.io_v1_clusterrole_platform-operators-proxy-role.yaml \
+	rbac.authorization.k8s.io_v1_clusterrolebinding_platform-operators-manager-rolebinding.yaml \
+	rbac.authorization.k8s.io_v1_clusterrolebinding_platform-operators-proxy-rolebinding.yaml \
+	rbac.authorization.k8s.io_v1_role_platform-operators-leader-election-role.yaml \
+	rbac.authorization.k8s.io_v1_rolebinding_platform-operators-leader-election-rolebinding.yaml
+
+# Generate manifests e.g. CRD, RBAC etc.
+.PHONY: manifests
+manifests: generate kustomize
+	$(KUSTOMIZE) build config/default -o $(TMP_DIR)/
+	ls $(TMP_DIR)
+
+	@# now rename/join the output files into the files we expect
+	mv $(TMP_DIR)/apiextensions.k8s.io_v1_customresourcedefinition_platformoperators.platform.openshift.io.yaml manifests/0000_50_cluster-platform-operator-manager_00-platformoperator.crd.yaml
+	mv $(TMP_DIR)/v1_namespace_openshift-platform-operators-system.yaml manifests/0000_50_cluster-platform-operator-manager_00-namespace.yaml
+	mv $(TMP_DIR)/v1_serviceaccount_platform-operators-controller-manager.yaml manifests/0000_50_cluster-platform-operator-manager_01-serviceaccount.yaml
+	mv $(TMP_DIR)/v1_service_platform-operators-controller-manager-metrics-service.yaml manifests/0000_50_cluster-platform-operator-manager_02-metricsservice.yaml
+	mv $(TMP_DIR)/apps_v1_deployment_platform-operators-controller-manager.yaml manifests/0000_50_cluster-platform-operator-manager_06-deployment.yaml
+
+	@# cluster-platform-operator-manager rbacs
+	rm -f manifests/0000_50_cluster-platform-operator-manager_05_rbac.yaml
+	for rbac in $(RBAC_LIST); do \
+		cat $(TMP_DIR)/$${rbac} >> manifests/0000_50_cluster-platform-operator-manager_05_rbac.yaml ;\
+		echo '---' >> manifests/0000_50_cluster-platform-operator-manager_05_rbac.yaml ;\
+	done
+
 .PHONY: lint
 lint: ## Run golangci-lint linter checks.
 lint: golangci-lint
@@ -69,7 +99,7 @@ test-e2e: ginkgo ## Run e2e tests
 	$(GINKGO) -trace -progress test/e2e
 
 .PHONY: verify
-verify: tidy generate
+verify: tidy manifests
 	git diff --exit-code
 
 ##@ Build
@@ -102,27 +132,24 @@ kind-cluster: kind
 
 .PHONY: install
 install: generate kustomize ## Install CRDs into the K8s cluster specified in ~/.kube/config.
-	$(KUSTOMIZE) build config/crd | kubectl apply -f -
+	$(KUSTOMIZE) build config/crd | $(KUBECTL) apply -f -
 
 .PHONY: uninstall
 uninstall: generate kustomize ## Uninstall CRDs from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
-	$(KUSTOMIZE) build config/crd | kubectl delete --ignore-not-found=$(ignore-not-found) -f -
+	$(KUSTOMIZE) build config/crd | $(KUBECTL) delete --ignore-not-found=$(ignore-not-found) -f -
 
 .PHONY: run
-run: build-container kind-cluster kind-load install
+run: build-container install
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
-	$(KUSTOMIZE) build config/default | kubectl apply -f -
+	$(KUSTOMIZE) build config/default | $(KUBECTL) apply -f -
 
 .PHONY: deploy
-deploy: run rukpak olm ## Deploy controller to the K8s cluster specified in ~/.kube/config.
+deploy: manifests ## Deploy controller to the K8s cluster specified in ~/.kube/config.
+	$(KUBECTL) apply -f manifests
 
 .PHONY: undeploy
 undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
-	$(KUSTOMIZE) build config/default | kubectl delete --ignore-not-found=$(ignore-not-found) -f -
-
-.PHONY: install-samples
-install-samples:  ## Install the sample manifests found in config/samples/manifests
-	kubectl apply -f config/samples
+	$(KUSTOMIZE) build config/default | $($(KUBECTL)) delete --ignore-not-found=$(ignore-not-found) -f -
 
 ##@ Build Dependencies
 
