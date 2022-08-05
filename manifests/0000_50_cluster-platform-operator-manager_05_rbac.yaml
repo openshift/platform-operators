@@ -1,30 +1,4 @@
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: platform-operators-manager-rolebinding
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: platform-operators-manager-role
-subjects:
-- kind: ServiceAccount
-  name: platform-operators-controller-manager
-  namespace: openshift-platform-operators-system
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: platform-operators-proxy-rolebinding
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: platform-operators-proxy-role
-subjects:
-- kind: ServiceAccount
-  name: platform-operators-controller-manager
-  namespace: openshift-platform-operators-system
----
-apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   creationTimestamp: null
@@ -118,14 +92,26 @@ rules:
   - create
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
+kind: ClusterRoleBinding
 metadata:
-  name: platform-operators-leader-election-rolebinding
-  namespace: openshift-platform-operators-system
+  name: platform-operators-manager-rolebinding
 roleRef:
   apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: platform-operators-leader-election-role
+  kind: ClusterRole
+  name: platform-operators-manager-role
+subjects:
+- kind: ServiceAccount
+  name: platform-operators-controller-manager
+  namespace: openshift-platform-operators-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: platform-operators-proxy-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: platform-operators-proxy-role
 subjects:
 - kind: ServiceAccount
   name: platform-operators-controller-manager
@@ -168,4 +154,18 @@ rules:
   verbs:
   - create
   - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: platform-operators-leader-election-rolebinding
+  namespace: openshift-platform-operators-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: platform-operators-leader-election-role
+subjects:
+- kind: ServiceAccount
+  name: platform-operators-controller-manager
+  namespace: openshift-platform-operators-system
 ---
