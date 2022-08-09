@@ -1,4 +1,3 @@
 bases:
   - ./apis
   - ./core
-  - ./crdvalidator
