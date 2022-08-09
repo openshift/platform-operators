@@ -63,9 +63,11 @@ RBAC_LIST = rbac.authorization.k8s.io_v1_clusterrole_platform-operators-manager-
 .PHONY: manifests
 manifests: generate kustomize
 	$(KUSTOMIZE) build config/default -o $(TMP_DIR)/
+	$(KUSTOMIZE) build config/rukpak -o $(TMP_DIR)/rukpak.yaml
 	ls $(TMP_DIR)
 
 	@# now rename/join the output files into the files we expect
+	mv $(TMP_DIR)/rukpak.yaml manifests/0000_50_cluster-platform-operator-manager_00-rukpak.yaml
 	mv $(TMP_DIR)/apiextensions.k8s.io_v1_customresourcedefinition_platformoperators.platform.openshift.io.yaml manifests/0000_50_cluster-platform-operator-manager_00-platformoperator.crd.yaml
 	mv $(TMP_DIR)/v1_namespace_openshift-platform-operators-system.yaml manifests/0000_50_cluster-platform-operator-manager_00-namespace.yaml
 	mv $(TMP_DIR)/v1_serviceaccount_platform-operators-controller-manager.yaml manifests/0000_50_cluster-platform-operator-manager_01-serviceaccount.yaml

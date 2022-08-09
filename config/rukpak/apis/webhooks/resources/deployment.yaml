@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: system
+  name: webhooks
+  labels:
+    app: webhooks
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webhooks
+  template:
+    metadata:
+      labels:
+        app: webhooks
+    spec:
+      serviceAccountName: webhooks-admin
+      containers:
+        - name: webhooks
+          command: ["/webhooks"]
+          image: quay.io/operator-framework/rukpak:v0.8.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+            - containerPort: 9443
+              name: webhook-server
+              protocol: TCP
+          volumeMounts:
+          - mountPath: /tmp/k8s-webhook-server/serving-certs
+            name: cert
+            readOnly: true
+      volumes:
+        - name: cert
+          secret:
+            defaultMode: 420
+            secretName: rukpak-webhook-certificate
