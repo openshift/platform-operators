@@ -1,11 +1,6 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: crdvalidator-system
----
-apiVersion: v1
-kind: Namespace
-metadata:
   name: rukpak-system
 ---
 apiVersion: apiextensions.k8s.io/v1
@@ -530,12 +525,6 @@ spec:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: crd-validation-webhook
-  namespace: crdvalidator-system
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
   name: core-admin
   namespace: rukpak-system
 ---
@@ -656,26 +645,6 @@ rules:
   - update
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: crd-validation-webhook
-rules:
-- apiGroups:
-  - apiextensions.k8s.io
-  resources:
-  - customresourcedefinitions
-  verbs:
-  - get
-  - watch
-  - list
-- apiGroups:
-  - '*'
-  resources:
-  - '*'
-  verbs:
-  - list
----
-apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: core-admin
@@ -688,32 +657,6 @@ subjects:
   kind: ServiceAccount
   name: core-admin
   namespace: rukpak-system
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: crd-validation-webhook
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: crd-validation-webhook
-subjects:
-- kind: ServiceAccount
-  name: crd-validation-webhook
-  namespace: crdvalidator-system
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: crd-validation-webhook
-  namespace: crdvalidator-system
-spec:
-  ports:
-  - port: 9443
-    protocol: TCP
-    targetPort: 9443
-  selector:
-    app: crd-validation-webhook
 ---
 apiVersion: v1
 kind: Service
@@ -741,35 +684,6 @@ spec:
     targetPort: 9443
   selector:
     app: webhooks
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: crd-validation-webhook
-  namespace: crdvalidator-system
-spec:
-  selector:
-    matchLabels:
-      app: crd-validation-webhook
-  template:
-    metadata:
-      labels:
-        app: crd-validation-webhook
-    spec:
-      containers:
-      - command:
-        - /crdvalidator
-        image: quay.io/operator-framework/rukpak:v0.8.0
-        imagePullPolicy: IfNotPresent
-        name: crd-validation-webhook
-        volumeMounts:
-        - mountPath: /etc/admission-webhook/tls
-          name: tls
-      serviceAccountName: crd-validation-webhook
-      volumes:
-      - name: tls
-        secret:
-          secretName: crd-validation-webhook-certificate
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -883,18 +797,6 @@ spec:
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: crd-validation-webhook-certificate
-  namespace: crdvalidator-system
-spec:
-  dnsNames:
-  - crd-validation-webhook.crdvalidator-system.svc
-  issuerRef:
-    name: selfsigned
-  secretName: crd-validation-webhook-certificate
----
-apiVersion: cert-manager.io/v1
-kind: Certificate
-metadata:
   name: core
   namespace: rukpak-system
 spec:
@@ -952,14 +854,6 @@ spec:
 apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
-  name: selfsigned
-  namespace: crdvalidator-system
-spec:
-  selfSigned: {}
----
-apiVersion: cert-manager.io/v1
-kind: Issuer
-metadata:
   name: rukpak-ca-issuer
   namespace: rukpak-system
 spec:
@@ -973,38 +867,6 @@ metadata:
   namespace: rukpak-system
 spec:
   selfSigned: {}
----
-apiVersion: admissionregistration.k8s.io/v1
-kind: ValidatingWebhookConfiguration
-metadata:
-  annotations:
-    cert-manager.io/inject-ca-from: crdvalidator-system/crd-validation-webhook-certificate
-  name: crd-validation-webhook
-webhooks:
-- admissionReviewVersions:
-  - v1
-  clientConfig:
-    service:
-      name: crd-validation-webhook
-      namespace: crdvalidator-system
-      path: /validate-crd
-      port: 9443
-  name: webhook.crdvalidator.io
-  objectSelector:
-    matchLabels:
-      core.rukpak.io/owner-kind: BundleDeployment
-  rules:
-  - apiGroups:
-    - apiextensions.k8s.io
-    apiVersions:
-    - v1
-    operations:
-    - CREATE
-    - UPDATE
-    resources:
-    - customresourcedefinitions
-    scope: '*'
-  sideEffects: None
 ---
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
