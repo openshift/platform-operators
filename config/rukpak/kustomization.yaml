@@ -1,3 +1,4 @@
+namePrefix: rukpak-
 bases:
   - ./apis
   - ./core

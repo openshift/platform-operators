@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: core
+  name: platform-operators-rukpak-core
+  namespace: openshift-platform-operators-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: core
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/default-container: manager
+      labels:
+        app: core
+    spec:
+      containers:
+      - args:
+        - --secure-listen-address=0.0.0.0:8443
+        - --upstream=http://127.0.0.1:8080/
+        - --logtostderr=true
+        - --v=10
+        - --client-ca-file=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        - --tls-cert-file=/etc/pki/tls/tls.crt
+        - --tls-private-key-file=/etc/pki/tls/tls.key
+        image: quay.io/brancz/kube-rbac-proxy:v0.12.0
+        name: kube-rbac-proxy
+        ports:
+        - containerPort: 8443
+          name: https
+          protocol: TCP
+        volumeMounts:
+        - mountPath: /etc/pki/tls
+          name: certs
+      - args:
+        - --unpack-image=quay.io/operator-framework/rukpak:v0.8.0
+        - --base-upload-manager-url=https://platform-operators-rukpak-core.openshift-platform-operators-system.svc
+        - --provisioner-storage-dir=/var/cache/bundles
+        - --upload-storage-dir=/var/cache/uploads
+        - --http-bind-address=127.0.0.1:8080
+        - --http-external-address=https://platform-operators-rukpak-core.openshift-platform-operators-system.svc
+        - --bundle-ca-file=/etc/pki/tls/ca.crt
+        command:
+        - /core
+        image: quay.io/operator-framework/rukpak:v0.8.0
+        imagePullPolicy: IfNotPresent
+        name: manager
+        ports:
+        - containerPort: 8080
+        volumeMounts:
+        - mountPath: /var/cache/bundles
+          name: bundle-cache
+        - mountPath: /var/cache/uploads
+          name: upload-cache
+        - mountPath: /etc/pki/tls
+          name: certs
+      serviceAccountName: platform-operators-rukpak-core-admin
+      volumes:
+      - emptyDir: {}
+        name: bundle-cache
+      - emptyDir: {}
+        name: upload-cache
+      - name: certs
+        secret:
+          optional: false
+          secretName: core-cert
