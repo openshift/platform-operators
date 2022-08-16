@@ -4,7 +4,7 @@ metadata:
   labels:
     control-plane: controller-manager
   name: platform-operators-controller-manager
-  namespace: openshift-platform-operators-system
+  namespace: openshift-platform-operators
 spec:
   replicas: 1
   selector:

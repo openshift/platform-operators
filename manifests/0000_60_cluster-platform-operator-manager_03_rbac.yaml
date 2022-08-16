@@ -102,7 +102,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: platform-operators-controller-manager
-  namespace: openshift-platform-operators-system
+  namespace: openshift-platform-operators
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -115,13 +115,13 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: platform-operators-controller-manager
-  namespace: openshift-platform-operators-system
+  namespace: openshift-platform-operators
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: platform-operators-leader-election-role
-  namespace: openshift-platform-operators-system
+  namespace: openshift-platform-operators
 rules:
 - apiGroups:
   - ""
@@ -159,7 +159,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: platform-operators-leader-election-rolebinding
-  namespace: openshift-platform-operators-system
+  namespace: openshift-platform-operators
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -167,7 +167,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: platform-operators-controller-manager
-  namespace: openshift-platform-operators-system
+  namespace: openshift-platform-operators
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -291,5 +291,5 @@ subjects:
 - apiGroup: ""
   kind: ServiceAccount
   name: platform-operators-rukpak-core-admin
-  namespace: openshift-platform-operators-system
+  namespace: openshift-platform-operators
 ---

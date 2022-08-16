@@ -2,7 +2,7 @@ apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: platform-operators-rukpak-ca
-  namespace: openshift-platform-operators-system
+  namespace: openshift-platform-operators
 spec:
   dnsNames:
   - rukpak.io

@@ -4,7 +4,7 @@ metadata:
   labels:
     app: webhooks
   name: platform-operators-rukpak-webhooks
-  namespace: openshift-platform-operators-system
+  namespace: openshift-platform-operators
 spec:
   replicas: 1
   selector:

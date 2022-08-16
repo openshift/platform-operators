@@ -2,4 +2,4 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: platform-operators-rukpak-core-admin
-  namespace: openshift-platform-operators-system
+  namespace: openshift-platform-operators

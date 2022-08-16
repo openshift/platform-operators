@@ -2,7 +2,7 @@ apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
   annotations:
-    cert-manager.io/inject-ca-from: openshift-platform-operators-system/platform-operators-rukpak-webhook-certificate
+    cert-manager.io/inject-ca-from: openshift-platform-operators/platform-operators-rukpak-webhook-certificate
   name: platform-operators-rukpak-validating-webhook-configuration
 webhooks:
 - admissionReviewVersions:
@@ -10,7 +10,7 @@ webhooks:
   clientConfig:
     service:
       name: platform-operators-rukpak-webhook-service
-      namespace: openshift-platform-operators-system
+      namespace: openshift-platform-operators
       path: /validate-core-rukpak-io-v1alpha1-bundle
   failurePolicy: Fail
   name: vbundles.core.rukpak.io

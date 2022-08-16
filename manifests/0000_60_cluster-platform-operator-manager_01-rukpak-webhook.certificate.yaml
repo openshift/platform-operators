@@ -2,11 +2,11 @@ apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: platform-operators-rukpak-webhook-certificate
-  namespace: openshift-platform-operators-system
+  namespace: openshift-platform-operators
 spec:
   dnsNames:
-  - platform-operators-rukpak-webhook-service.openshift-platform-operators-system.svc
-  - platform-operators-rukpak-webhook-service.openshift-platform-operators-system.svc.cluster.local
+  - platform-operators-rukpak-webhook-service.openshift-platform-operators.svc
+  - platform-operators-rukpak-webhook-service.openshift-platform-operators.svc.cluster.local
   issuerRef:
     kind: Issuer
     name: platform-operators-rukpak-selfsigned

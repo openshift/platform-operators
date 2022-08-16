@@ -4,7 +4,7 @@ metadata:
   labels:
     app: core
   name: platform-operators-rukpak-core
-  namespace: openshift-platform-operators-system
+  namespace: openshift-platform-operators
 spec:
   replicas: 1
   selector:
@@ -37,11 +37,11 @@ spec:
           name: certs
       - args:
         - --unpack-image=quay.io/operator-framework/rukpak:v0.8.0
-        - --base-upload-manager-url=https://platform-operators-rukpak-core.openshift-platform-operators-system.svc
+        - --base-upload-manager-url=https://platform-operators-rukpak-core.openshift-platform-operators.svc
         - --provisioner-storage-dir=/var/cache/bundles
         - --upload-storage-dir=/var/cache/uploads
         - --http-bind-address=127.0.0.1:8080
-        - --http-external-address=https://platform-operators-rukpak-core.openshift-platform-operators-system.svc
+        - --http-external-address=https://platform-operators-rukpak-core.openshift-platform-operators.svc
         - --bundle-ca-file=/etc/pki/tls/ca.crt
         command:
         - /core

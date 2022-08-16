@@ -89,7 +89,7 @@ manifests: generate kustomize
 	$(MV_TMP_DIR)/admissionregistration.k8s.io_v1_validatingwebhookconfiguration_platform-operators-rukpak-validating-webhook-configuration.yaml manifests/0000_60_cluster-platform-operator-manager_05-rukpak.validating-webhook-configuration.yaml
 
 	@# Move all of the platform operators manifests into the manifests folder
-	$(MV_TMP_DIR)/v1_namespace_openshift-platform-operators-system.yaml manifests/0000_60_cluster-platform-operator-manager_00-namespace.yaml
+	$(MV_TMP_DIR)/v1_namespace_openshift-platform-operators.yaml manifests/0000_60_cluster-platform-operator-manager_00-namespace.yaml
 	$(MV_TMP_DIR)/apiextensions.k8s.io_v1_customresourcedefinition_platformoperators.platform.openshift.io.yaml manifests/0000_60_cluster-platform-operator-manager_00-platformoperator.crd.yaml
 	$(MV_TMP_DIR)/v1_serviceaccount_platform-operators-controller-manager.yaml manifests/0000_60_cluster-platform-operator-manager_01-serviceaccount.yaml
 	$(MV_TMP_DIR)/v1_service_platform-operators-controller-manager-metrics-service.yaml manifests/0000_60_cluster-platform-operator-manager_02-metricsservice.yaml

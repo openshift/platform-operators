@@ -2,7 +2,7 @@ apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
   name: platform-operators-rukpak-ca-issuer
-  namespace: openshift-platform-operators-system
+  namespace: openshift-platform-operators
 spec:
   ca:
     secretName: rukpak-ca
