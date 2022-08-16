@@ -102,7 +102,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: platform-operators-controller-manager
-  namespace: openshift-platform-operators-system
+  namespace: openshift-platform-operators
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -115,13 +115,13 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: platform-operators-controller-manager
-  namespace: openshift-platform-operators-system
+  namespace: openshift-platform-operators
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: platform-operators-leader-election-role
-  namespace: openshift-platform-operators-system
+  namespace: openshift-platform-operators
 rules:
 - apiGroups:
   - ""
@@ -159,7 +159,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: platform-operators-leader-election-rolebinding
-  namespace: openshift-platform-operators-system
+  namespace: openshift-platform-operators
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -167,5 +167,129 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: platform-operators-controller-manager
-  namespace: openshift-platform-operators-system
+  namespace: openshift-platform-operators
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: platform-operators-rukpak-bundle-reader
+rules:
+- nonResourceURLs:
+  - /bundles/*
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: platform-operators-rukpak-bundle-uploader
+rules:
+- nonResourceURLs:
+  - /bundles/*
+  verbs:
+  - put
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  creationTimestamp: null
+  name: platform-operators-rukpak-core-admin
+rules:
+- nonResourceURLs:
+  - /bundles/*
+  verbs:
+  - get
+- nonResourceURLs:
+  - /uploads/*
+  verbs:
+  - get
+- apiGroups:
+  - '*'
+  resources:
+  - '*'
+  verbs:
+  - '*'
+- apiGroups:
+  - authentication.k8s.io
+  resources:
+  - tokenreviews
+  verbs:
+  - create
+- apiGroups:
+  - authorization.k8s.io
+  resources:
+  - subjectaccessreviews
+  verbs:
+  - create
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - create
+  - delete
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - pods/log
+  verbs:
+  - get
+- apiGroups:
+  - core.rukpak.io
+  resources:
+  - bundledeployments
+  verbs:
+  - list
+  - watch
+- apiGroups:
+  - core.rukpak.io
+  resources:
+  - bundledeployments/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - core.rukpak.io
+  resources:
+  - bundledeployments/status
+  verbs:
+  - patch
+  - update
+- apiGroups:
+  - core.rukpak.io
+  resources:
+  - bundles
+  verbs:
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - core.rukpak.io
+  resources:
+  - bundles/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - core.rukpak.io
+  resources:
+  - bundles/status
+  verbs:
+  - patch
+  - update
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: platform-operators-rukpak-core-admin
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: platform-operators-rukpak-core-admin
+subjects:
+- apiGroup: ""
+  kind: ServiceAccount
+  name: platform-operators-rukpak-core-admin
+  namespace: openshift-platform-operators
 ---

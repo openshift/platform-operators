@@ -9,6 +9,7 @@ KUBECTL ?= kubectl
 KIND_CLUSTER_NAME ?= kind
 GO_INSTALL_OPTS ?= "-mod=readonly"
 TMP_DIR := $(shell mktemp -d -t manifests-$(date +%Y-%m-%d-%H-%M-%S)-XXXXXXXXXX)
+MV_TMP_DIR := mv $(TMP_DIR)
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
@@ -57,28 +58,48 @@ RBAC_LIST = rbac.authorization.k8s.io_v1_clusterrole_platform-operators-manager-
 	rbac.authorization.k8s.io_v1_clusterrolebinding_platform-operators-manager-rolebinding.yaml \
 	rbac.authorization.k8s.io_v1_clusterrolebinding_platform-operators-proxy-rolebinding.yaml \
 	rbac.authorization.k8s.io_v1_role_platform-operators-leader-election-role.yaml \
-	rbac.authorization.k8s.io_v1_rolebinding_platform-operators-leader-election-rolebinding.yaml
+	rbac.authorization.k8s.io_v1_rolebinding_platform-operators-leader-election-rolebinding.yaml \
+	rbac.authorization.k8s.io_v1_clusterrole_platform-operators-rukpak-bundle-reader.yaml \
+	rbac.authorization.k8s.io_v1_clusterrole_platform-operators-rukpak-bundle-uploader.yaml \
+	rbac.authorization.k8s.io_v1_clusterrole_platform-operators-rukpak-core-admin.yaml \
+	rbac.authorization.k8s.io_v1_clusterrolebinding_platform-operators-rukpak-core-admin.yaml
+
 
 # Generate manifests e.g. CRD, RBAC etc.
 .PHONY: manifests
 manifests: generate kustomize
 	$(KUSTOMIZE) build config/default -o $(TMP_DIR)/
-	$(KUSTOMIZE) build config/rukpak -o $(TMP_DIR)/rukpak.yaml
 	ls $(TMP_DIR)
 
-	@# now rename/join the output files into the files we expect
-	mv $(TMP_DIR)/rukpak.yaml manifests/0000_50_cluster-platform-operator-manager_00-rukpak.yaml
-	mv $(TMP_DIR)/apiextensions.k8s.io_v1_customresourcedefinition_platformoperators.platform.openshift.io.yaml manifests/0000_50_cluster-platform-operator-manager_00-platformoperator.crd.yaml
-	mv $(TMP_DIR)/v1_namespace_openshift-platform-operators-system.yaml manifests/0000_50_cluster-platform-operator-manager_00-namespace.yaml
-	mv $(TMP_DIR)/v1_serviceaccount_platform-operators-controller-manager.yaml manifests/0000_50_cluster-platform-operator-manager_01-serviceaccount.yaml
-	mv $(TMP_DIR)/v1_service_platform-operators-controller-manager-metrics-service.yaml manifests/0000_50_cluster-platform-operator-manager_02-metricsservice.yaml
-	mv $(TMP_DIR)/apps_v1_deployment_platform-operators-controller-manager.yaml manifests/0000_50_cluster-platform-operator-manager_06-deployment.yaml
+	@# Move all of the rukpak manifests into the manifests folder
+	$(MV_TMP_DIR)/apiextensions.k8s.io_v1_customresourcedefinition_bundledeployments.core.rukpak.io.yaml manifests/0000_60_cluster-platform-operator-manager_00-rukpak-bundledeployments.crd.yaml
+	$(MV_TMP_DIR)/apiextensions.k8s.io_v1_customresourcedefinition_bundles.core.rukpak.io.yaml manifests/0000_60_cluster-platform-operator-manager_00-rukpak-bundles.crd.yaml
+	$(MV_TMP_DIR)/v1_serviceaccount_platform-operators-rukpak-core-admin.yaml manifests/0000_60_cluster-platform-operator-manager_01-rukpak-core-admin.sa.yaml
+	$(MV_TMP_DIR)/v1_serviceaccount_platform-operators-rukpak-webhooks-admin.yaml manifests/0000_60_cluster-platform-operator-manager_01-rukpak-webhooks-admin.sa.yaml
+	$(MV_TMP_DIR)/cert-manager.io_v1_clusterissuer_platform-operators-rukpak-selfsigned-issuer.yaml manifests/0000_60_cluster-platform-operator-manager_01-rukpak-selfsigned.issuer.yaml
+	$(MV_TMP_DIR)/cert-manager.io_v1_issuer_platform-operators-rukpak-selfsigned.yaml manifests/0000_60_cluster-platform-operator-manager_01-rukpak-webhook-selfsigned.issuer.yaml
+	$(MV_TMP_DIR)/cert-manager.io_v1_issuer_platform-operators-rukpak-ca-issuer.yaml manifests/0000_60_cluster-platform-operator-manager_01-rukpak-ca.issuer.yaml
+	$(MV_TMP_DIR)/cert-manager.io_v1_certificate_platform-operators-rukpak-ca.yaml manifests/0000_60_cluster-platform-operator-manager_01-rukpak-ca.certificate.yaml
+	$(MV_TMP_DIR)/cert-manager.io_v1_certificate_platform-operators-rukpak-webhook-certificate.yaml manifests/0000_60_cluster-platform-operator-manager_01-rukpak-webhook.certificate.yaml
+	$(MV_TMP_DIR)/cert-manager.io_v1_certificate_platform-operators-rukpak-core.yaml manifests/0000_60_cluster-platform-operator-manager_01-rukpak-core.certificate.yaml
+	$(MV_TMP_DIR)/v1_service_platform-operators-rukpak-core.yaml manifests/0000_60_cluster-platform-operator-manager_02-rukpak-core.service.yaml
+	$(MV_TMP_DIR)/v1_service_platform-operators-rukpak-webhook-service.yaml manifests/0000_60_cluster-platform-operator-manager_02-rukpak-webhook.service.yaml
+	$(MV_TMP_DIR)/apps_v1_deployment_platform-operators-rukpak-webhooks.yaml manifests/0000_60_cluster-platform-operator-manager_04-rukpak-webhooks.deployment.yaml
+	$(MV_TMP_DIR)/apps_v1_deployment_platform-operators-rukpak-core.yaml manifests/0000_60_cluster-platform-operator-manager_04-rukpak-core.deployment.yaml
+	$(MV_TMP_DIR)/admissionregistration.k8s.io_v1_validatingwebhookconfiguration_platform-operators-rukpak-validating-webhook-configuration.yaml manifests/0000_60_cluster-platform-operator-manager_05-rukpak.validating-webhook-configuration.yaml
+
+	@# Move all of the platform operators manifests into the manifests folder
+	$(MV_TMP_DIR)/v1_namespace_openshift-platform-operators.yaml manifests/0000_60_cluster-platform-operator-manager_00-namespace.yaml
+	$(MV_TMP_DIR)/apiextensions.k8s.io_v1_customresourcedefinition_platformoperators.platform.openshift.io.yaml manifests/0000_60_cluster-platform-operator-manager_00-platformoperator.crd.yaml
+	$(MV_TMP_DIR)/v1_serviceaccount_platform-operators-controller-manager.yaml manifests/0000_60_cluster-platform-operator-manager_01-serviceaccount.yaml
+	$(MV_TMP_DIR)/v1_service_platform-operators-controller-manager-metrics-service.yaml manifests/0000_60_cluster-platform-operator-manager_02-metricsservice.yaml
+	$(MV_TMP_DIR)/apps_v1_deployment_platform-operators-controller-manager.yaml manifests/0000_60_cluster-platform-operator-manager_06-deployment.yaml
 
 	@# cluster-platform-operator-manager rbacs
-	rm -f manifests/0000_50_cluster-platform-operator-manager_05_rbac.yaml
+	rm -f manifests/0000_60_cluster-platform-operator-manager_03_rbac.yaml
 	for rbac in $(RBAC_LIST); do \
-		cat $(TMP_DIR)/$${rbac} >> manifests/0000_50_cluster-platform-operator-manager_05_rbac.yaml ;\
-		echo '---' >> manifests/0000_50_cluster-platform-operator-manager_05_rbac.yaml ;\
+		cat $(TMP_DIR)/$${rbac} >> manifests/0000_60_cluster-platform-operator-manager_03_rbac.yaml ;\
+		echo '---' >> manifests/0000_60_cluster-platform-operator-manager_03_rbac.yaml ;\
 	done
 
 .PHONY: lint

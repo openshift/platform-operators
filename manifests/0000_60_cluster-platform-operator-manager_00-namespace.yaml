@@ -3,4 +3,4 @@ kind: Namespace
 metadata:
   labels:
     control-plane: controller-manager
-  name: openshift-platform-operators-system
+  name: openshift-platform-operators

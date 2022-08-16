@@ -1,0 +1,7 @@
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: platform-operators-rukpak-selfsigned
+  namespace: openshift-platform-operators
+spec:
+  selfSigned: {}

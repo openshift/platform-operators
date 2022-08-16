@@ -1,0 +1,14 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: platform-operators-rukpak-core
+  namespace: openshift-platform-operators
+spec:
+  dnsNames:
+  - localhost
+  - platform-operators-rukpak-core.openshift-platform-operators.svc
+  - platform-operators-rukpak-core.openshift-platform-operators.svc.cluster.local
+  issuerRef:
+    kind: Issuer
+    name: rukpak-ca-issuer
+  secretName: core-cert
