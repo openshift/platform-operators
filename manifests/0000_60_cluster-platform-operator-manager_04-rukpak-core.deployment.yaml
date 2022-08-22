@@ -9,6 +9,10 @@ metadata:
   namespace: openshift-platform-operators
 spec:
   replicas: 1
+  securityContext:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
   selector:
     matchLabels:
       app: core
@@ -35,6 +39,11 @@ spec:
         - containerPort: 8443
           name: https
           protocol: TCP
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
         volumeMounts:
         - mountPath: /etc/pki/tls
           name: certs
@@ -53,6 +62,11 @@ spec:
         name: manager
         ports:
         - containerPort: 8080
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
         volumeMounts:
         - mountPath: /var/cache/bundles
           name: bundle-cache

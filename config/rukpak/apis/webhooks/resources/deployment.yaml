@@ -9,6 +9,10 @@ spec:
   strategy:
     rollingUpdate:
       maxUnavailable: 25%
+  securityContext:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
   selector:
     matchLabels:
       app: webhooks
@@ -27,6 +31,10 @@ spec:
       serviceAccountName: webhooks-admin
       containers:
         - name: webhooks
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ "ALL" ]
           command: ["/webhooks"]
           image: quay.io/operator-framework/rukpak:v0.8.0
           imagePullPolicy: IfNotPresent

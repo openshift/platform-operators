@@ -5,4 +5,7 @@ metadata:
     release.openshift.io/feature-gate: TechPreviewNoUpgrade
   labels:
     control-plane: controller-manager
+    openshift.io/scc: anyuid
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: v1.24
   name: openshift-platform-operators

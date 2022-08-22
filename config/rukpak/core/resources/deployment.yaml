@@ -5,6 +5,10 @@ metadata:
   labels:
     app: core
 spec:
+  securityContext:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
   replicas: 1
   selector:
     matchLabels:
@@ -19,6 +23,10 @@ spec:
       serviceAccountName: core-admin
       containers:
         - name: kube-rbac-proxy
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ "ALL" ]
           image: quay.io/brancz/kube-rbac-proxy:v0.12.0
           args:
             - "--secure-listen-address=0.0.0.0:8443"
@@ -36,6 +44,10 @@ spec:
             - name: certs
               mountPath: /etc/pki/tls
         - name: manager
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ "ALL" ]
           image: quay.io/operator-framework/rukpak:v0.8.0
           imagePullPolicy: IfNotPresent
           command: ["/core"]

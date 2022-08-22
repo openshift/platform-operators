@@ -3,6 +3,9 @@ kind: Namespace
 metadata:
   labels:
     control-plane: controller-manager
+    openshift.io/scc: "anyuid"
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: v1.24
   name: system
 ---
 apiVersion: apps/v1
@@ -26,6 +29,8 @@ spec:
     spec:
       securityContext:
         runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
       containers:
       - command:
         - /manager
@@ -36,6 +41,8 @@ spec:
         imagePullPolicy: IfNotPresent
         securityContext:
           allowPrivilegeEscalation: false
+          capabilities:
+              drop: [ "ALL" ]
         livenessProbe:
           httpGet:
             path: /healthz
