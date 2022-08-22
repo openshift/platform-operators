@@ -6,15 +6,25 @@ metadata:
   name: platform-operators-rukpak-webhooks
   namespace: openshift-platform-operators
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: webhooks
+  strategy:
+    rollingUpdate:
+      maxUnavailable: 25%
   template:
     metadata:
       labels:
         app: webhooks
     spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                app: webhooks
+            topologyKey: kubernetes.io/hostname
       containers:
       - command:
         - /webhooks
