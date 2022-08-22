@@ -1,6 +1,8 @@
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
+  annotations:
+    release.openshift.io/feature-gate: TechPreviewNoUpgrade
   name: platform-operators-rukpak-webhook-certificate
   namespace: openshift-platform-operators
 spec:

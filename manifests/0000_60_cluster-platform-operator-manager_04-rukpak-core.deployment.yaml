@@ -1,6 +1,8 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  annotations:
+    release.openshift.io/feature-gate: TechPreviewNoUpgrade
   labels:
     app: core
   name: platform-operators-rukpak-core
@@ -14,6 +16,7 @@ spec:
     metadata:
       annotations:
         kubectl.kubernetes.io/default-container: manager
+        release.openshift.io/feature-gate: TechPreviewNoUpgrade
       labels:
         app: core
     spec:
