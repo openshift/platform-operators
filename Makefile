@@ -99,6 +99,7 @@ manifests: generate yq kustomize
 	$(MV_TMP_DIR)/v1_serviceaccount_platform-operators-controller-manager.yaml manifests/0000_50_cluster-platform-operator-manager_01-serviceaccount.yaml
 	$(MV_TMP_DIR)/v1_service_platform-operators-controller-manager-metrics-service.yaml manifests/0000_50_cluster-platform-operator-manager_02-metricsservice.yaml
 	$(MV_TMP_DIR)/apps_v1_deployment_platform-operators-controller-manager.yaml manifests/0000_50_cluster-platform-operator-manager_06-deployment.yaml
+	$(MV_TMP_DIR)/config.openshift.io_v1_clusteroperator_platform-operators-aggregated.yaml manifests/0000_50_cluster-platform-operator-manager_07-aggregated-clusteroperator.yaml
 
 	@# cluster-platform-operator-manager rbacs
 	rm -f manifests/0000_50_cluster-platform-operator-manager_03_rbac.yaml

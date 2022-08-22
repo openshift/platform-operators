@@ -8,6 +8,18 @@ metadata:
   name: platform-operators-manager-role
 rules:
 - apiGroups:
+  - config.openshift.io
+  resources:
+  - clusteroperators
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
   - core.rukpak.io
   resources:
   - bundledeployments
