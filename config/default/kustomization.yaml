@@ -12,6 +12,10 @@ namePrefix: platform-operators-
 #commonLabels:
 #  someName: someValue
 
+# Annotations to add to all resources.
+commonAnnotations:
+  release.openshift.io/feature-gate: TechPreviewNoUpgrade
+
 bases:
 - ../crd
 - ../rbac

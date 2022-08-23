@@ -1,6 +1,8 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
+  annotations:
+    release.openshift.io/feature-gate: TechPreviewNoUpgrade
   creationTimestamp: null
   name: platform-operators-manager-role
 rules:
@@ -66,6 +68,8 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
+  annotations:
+    release.openshift.io/feature-gate: TechPreviewNoUpgrade
   name: platform-operators-metrics-reader
 rules:
 - nonResourceURLs:
@@ -76,6 +80,8 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
+  annotations:
+    release.openshift.io/feature-gate: TechPreviewNoUpgrade
   name: platform-operators-proxy-role
 rules:
 - apiGroups:
@@ -94,6 +100,8 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
+  annotations:
+    release.openshift.io/feature-gate: TechPreviewNoUpgrade
   name: platform-operators-manager-rolebinding
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -107,6 +115,8 @@ subjects:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
+  annotations:
+    release.openshift.io/feature-gate: TechPreviewNoUpgrade
   name: platform-operators-proxy-rolebinding
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -120,6 +130,8 @@ subjects:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
+  annotations:
+    release.openshift.io/feature-gate: TechPreviewNoUpgrade
   name: platform-operators-leader-election-role
   namespace: openshift-platform-operators
 rules:
@@ -158,6 +170,8 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
+  annotations:
+    release.openshift.io/feature-gate: TechPreviewNoUpgrade
   name: platform-operators-leader-election-rolebinding
   namespace: openshift-platform-operators
 roleRef:
@@ -172,6 +186,8 @@ subjects:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
+  annotations:
+    release.openshift.io/feature-gate: TechPreviewNoUpgrade
   name: platform-operators-rukpak-bundle-reader
 rules:
 - nonResourceURLs:
@@ -182,6 +198,8 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
+  annotations:
+    release.openshift.io/feature-gate: TechPreviewNoUpgrade
   name: platform-operators-rukpak-bundle-uploader
 rules:
 - nonResourceURLs:
@@ -192,6 +210,8 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
+  annotations:
+    release.openshift.io/feature-gate: TechPreviewNoUpgrade
   creationTimestamp: null
   name: platform-operators-rukpak-core-admin
 rules:
@@ -282,6 +302,8 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
+  annotations:
+    release.openshift.io/feature-gate: TechPreviewNoUpgrade
   name: platform-operators-rukpak-core-admin
 roleRef:
   apiGroup: rbac.authorization.k8s.io
