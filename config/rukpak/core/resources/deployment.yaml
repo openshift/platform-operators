@@ -28,13 +28,17 @@ spec:
             - "--client-ca-file=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
             - "--tls-cert-file=/etc/pki/tls/tls.crt"
             - "--tls-private-key-file=/etc/pki/tls/tls.key"
+            - "--upstream-ca-file=/etc/configmaps/operator-cert-ca-bundle/service-ca.crt"
           ports:
             - containerPort: 8443
               protocol: TCP
               name: https
           volumeMounts:
-            - name: certs
+            - name: tls
               mountPath: /etc/pki/tls
+            - name: certs
+              mountPath: /etc/configmaps/operator-cert-ca-bundle
+              readOnly: false
         - name: manager
           image: quay.io/operator-framework/rukpak:main
           imagePullPolicy: IfNotPresent
@@ -54,13 +58,19 @@ spec:
               mountPath: /var/cache/bundles
             - name: upload-cache
               mountPath: /var/cache/uploads
-            - name: certs
+            - name: tls
               mountPath: /etc/pki/tls
       volumes:
         - name: bundle-cache
           emptyDir: {}
         - name: upload-cache
           emptyDir: {}
-        - name: certs
+        - name: tls
           secret:
             secretName: platform-operators-rukpak-core-tls
+        - name: certs
+          configMap:
+            items:
+            - key: service-ca.crt
+              path: service-ca.crt
+            name: platform-operators-rukpak-webhook-tls
