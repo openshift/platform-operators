@@ -3,6 +3,7 @@ kind: Service
 metadata:
   annotations:
     release.openshift.io/feature-gate: TechPreviewNoUpgrade
+    service.beta.openshift.io/serving-cert-secret-name: platform-operators-rukpak-core-tls
   name: platform-operators-rukpak-core
   namespace: openshift-platform-operators
 spec:

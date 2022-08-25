@@ -3,6 +3,7 @@ resources:
   - resources/service.yaml
   - resources/deployment.yaml
   - resources/webhook.yaml
+  - resources/webhook_ca_configmap.yaml
 
 configurations:
 - kustomizeconfig.yaml

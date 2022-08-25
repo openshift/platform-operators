@@ -77,6 +77,8 @@ manifests: generate kustomize
 	@# Move all of the rukpak manifests into the manifests folder
 	$(MV_TMP_DIR)/apiextensions.k8s.io_v1_customresourcedefinition_bundledeployments.core.rukpak.io.yaml manifests/0000_60_cluster-platform-operator-manager_00-rukpak-bundledeployments.crd.yaml
 	$(MV_TMP_DIR)/apiextensions.k8s.io_v1_customresourcedefinition_bundles.core.rukpak.io.yaml manifests/0000_60_cluster-platform-operator-manager_00-rukpak-bundles.crd.yaml
+	$(MV_TMP_DIR)/v1_configmap_platform-operators-rukpak-core-tls.yaml manifests/0000_60_cluster-platform-operator-manager_01-core-ca.cm.yaml
+	$(MV_TMP_DIR)/v1_configmap_platform-operators-rukpak-webhook-tls.yaml manifests/0000_60_cluster-platform-operator-manager_01-webhook-ca.cm.yaml
 	$(MV_TMP_DIR)/v1_serviceaccount_platform-operators-rukpak-core-admin.yaml manifests/0000_60_cluster-platform-operator-manager_01-rukpak-core-admin.sa.yaml
 	$(MV_TMP_DIR)/v1_serviceaccount_platform-operators-rukpak-webhooks-admin.yaml manifests/0000_60_cluster-platform-operator-manager_01-rukpak-webhooks-admin.sa.yaml
 	$(MV_TMP_DIR)/v1_service_platform-operators-rukpak-core.yaml manifests/0000_60_cluster-platform-operator-manager_02-rukpak-core.service.yaml

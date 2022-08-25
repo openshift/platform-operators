@@ -49,4 +49,4 @@ spec:
       - name: cert
         secret:
           defaultMode: 420
-          secretName: rukpak-webhook-certificate
+          secretName: platform-operators-rukpak-webhook-tls

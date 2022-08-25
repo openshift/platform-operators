@@ -6,6 +6,7 @@ resources:
   - resources/deployment.yaml
   - resources/service.yaml
   - resources/serviceaccount.yaml
+  - resources/core_ca_configmap.yaml
 
 vars:
  - name: CORE_SERVICE_NAMESPACE # namespace of the service

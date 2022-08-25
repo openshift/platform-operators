@@ -25,7 +25,7 @@ spec:
         - --secure-listen-address=0.0.0.0:8443
         - --upstream=http://127.0.0.1:8080/
         - --logtostderr=true
-        - --v=10
+        - --v=1
         - --client-ca-file=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
         - --tls-cert-file=/etc/pki/tls/tls.crt
         - --tls-private-key-file=/etc/pki/tls/tls.key
@@ -45,7 +45,7 @@ spec:
         - --upload-storage-dir=/var/cache/uploads
         - --http-bind-address=127.0.0.1:8080
         - --http-external-address=https://platform-operators-rukpak-core.openshift-platform-operators.svc
-        - --bundle-ca-file=/etc/pki/tls/ca.crt
+        - --bundle-ca-file=/etc/pki/tls/tls.crt
         command:
         - /core
         image: quay.io/operator-framework/rukpak:v0.8.0
@@ -68,5 +68,4 @@ spec:
         name: upload-cache
       - name: certs
         secret:
-          optional: false
-          secretName: core-cert
+          secretName: platform-operators-rukpak-core-tls
