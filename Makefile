@@ -71,6 +71,9 @@ manifests: generate kustomize
 	$(KUSTOMIZE) build config/default -o $(TMP_DIR)/
 	ls $(TMP_DIR)
 
+	@# Cleanup the existing manifests so no removed ones linger post generation
+	rm manifests/* || true
+
 	@# Move all of the rukpak manifests into the manifests folder
 	$(MV_TMP_DIR)/apiextensions.k8s.io_v1_customresourcedefinition_bundledeployments.core.rukpak.io.yaml manifests/0000_60_cluster-platform-operator-manager_00-rukpak-bundledeployments.crd.yaml
 	$(MV_TMP_DIR)/apiextensions.k8s.io_v1_customresourcedefinition_bundles.core.rukpak.io.yaml manifests/0000_60_cluster-platform-operator-manager_00-rukpak-bundles.crd.yaml
