@@ -79,12 +79,6 @@ manifests: generate kustomize
 	$(MV_TMP_DIR)/apiextensions.k8s.io_v1_customresourcedefinition_bundles.core.rukpak.io.yaml manifests/0000_60_cluster-platform-operator-manager_00-rukpak-bundles.crd.yaml
 	$(MV_TMP_DIR)/v1_serviceaccount_platform-operators-rukpak-core-admin.yaml manifests/0000_60_cluster-platform-operator-manager_01-rukpak-core-admin.sa.yaml
 	$(MV_TMP_DIR)/v1_serviceaccount_platform-operators-rukpak-webhooks-admin.yaml manifests/0000_60_cluster-platform-operator-manager_01-rukpak-webhooks-admin.sa.yaml
-	$(MV_TMP_DIR)/cert-manager.io_v1_clusterissuer_platform-operators-rukpak-selfsigned-issuer.yaml manifests/0000_60_cluster-platform-operator-manager_01-rukpak-selfsigned.issuer.yaml
-	$(MV_TMP_DIR)/cert-manager.io_v1_issuer_platform-operators-rukpak-selfsigned.yaml manifests/0000_60_cluster-platform-operator-manager_01-rukpak-webhook-selfsigned.issuer.yaml
-	$(MV_TMP_DIR)/cert-manager.io_v1_issuer_platform-operators-rukpak-ca-issuer.yaml manifests/0000_60_cluster-platform-operator-manager_01-rukpak-ca.issuer.yaml
-	$(MV_TMP_DIR)/cert-manager.io_v1_certificate_platform-operators-rukpak-ca.yaml manifests/0000_60_cluster-platform-operator-manager_01-rukpak-ca.certificate.yaml
-	$(MV_TMP_DIR)/cert-manager.io_v1_certificate_platform-operators-rukpak-webhook-certificate.yaml manifests/0000_60_cluster-platform-operator-manager_01-rukpak-webhook.certificate.yaml
-	$(MV_TMP_DIR)/cert-manager.io_v1_certificate_platform-operators-rukpak-core.yaml manifests/0000_60_cluster-platform-operator-manager_01-rukpak-core.certificate.yaml
 	$(MV_TMP_DIR)/v1_service_platform-operators-rukpak-core.yaml manifests/0000_60_cluster-platform-operator-manager_02-rukpak-core.service.yaml
 	$(MV_TMP_DIR)/v1_service_platform-operators-rukpak-webhook-service.yaml manifests/0000_60_cluster-platform-operator-manager_02-rukpak-webhook.service.yaml
 	$(MV_TMP_DIR)/apps_v1_deployment_platform-operators-rukpak-webhooks.yaml manifests/0000_60_cluster-platform-operator-manager_04-rukpak-webhooks.deployment.yaml
