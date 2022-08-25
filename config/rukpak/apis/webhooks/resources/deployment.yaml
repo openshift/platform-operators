@@ -5,10 +5,6 @@ metadata:
   labels:
     app: webhooks
 spec:
-  replicas: 2
-  strategy:
-    rollingUpdate:
-      maxUnavailable: 25%
   selector:
     matchLabels:
       app: webhooks
@@ -17,13 +13,6 @@ spec:
       labels:
         app: webhooks
     spec:
-      affinity:
-        podAntiAffinity: 
-          requiredDuringSchedulingIgnoredDuringExecution: 
-          - labelSelector:
-              matchLabels:
-                app: webhooks
-            topologyKey: kubernetes.io/hostname
       serviceAccountName: webhooks-admin
       containers:
         - name: webhooks
