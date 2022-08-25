@@ -39,7 +39,7 @@ spec:
         - mountPath: /etc/pki/tls
           name: certs
       - args:
-        - --unpack-image=quay.io/operator-framework/rukpak:v0.8.0
+        - --unpack-image=quay.io/operator-framework/rukpak:main
         - --base-upload-manager-url=https://platform-operators-rukpak-core.openshift-platform-operators.svc
         - --provisioner-storage-dir=/var/cache/bundles
         - --upload-storage-dir=/var/cache/uploads
@@ -48,7 +48,7 @@ spec:
         - --bundle-ca-file=/etc/pki/tls/tls.crt
         command:
         - /core
-        image: quay.io/operator-framework/rukpak:v0.8.0
+        image: quay.io/operator-framework/rukpak:main
         imagePullPolicy: IfNotPresent
         name: manager
         ports:

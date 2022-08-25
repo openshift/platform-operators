@@ -32,7 +32,7 @@ spec:
       containers:
       - command:
         - /webhooks
-        image: quay.io/operator-framework/rukpak:v0.8.0
+        image: quay.io/operator-framework/rukpak:main
         imagePullPolicy: IfNotPresent
         name: webhooks
         ports:

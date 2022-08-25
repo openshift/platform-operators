@@ -36,11 +36,11 @@ spec:
             - name: certs
               mountPath: /etc/pki/tls
         - name: manager
-          image: quay.io/operator-framework/rukpak:v0.8.0
+          image: quay.io/operator-framework/rukpak:main
           imagePullPolicy: IfNotPresent
           command: ["/core"]
           args:
-            - "--unpack-image=quay.io/operator-framework/rukpak:v0.8.0"
+            - "--unpack-image=quay.io/operator-framework/rukpak:main"
             - "--base-upload-manager-url=https://$(CORE_SERVICE_NAME).$(CORE_SERVICE_NAMESPACE).svc"
             - "--provisioner-storage-dir=/var/cache/bundles"
             - "--upload-storage-dir=/var/cache/uploads"
