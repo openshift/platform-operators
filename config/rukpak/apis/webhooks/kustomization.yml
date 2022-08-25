@@ -10,6 +10,7 @@ configurations:
 
 patchesStrategicMerge:
 - patches/cainjection.yaml
+- patches/high-availability.yaml
 
 vars:
 - name: CERTIFICATE_NAMESPACE # namespace of the certificate CR
