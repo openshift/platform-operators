@@ -17,7 +17,7 @@ spec:
       containers:
         - name: webhooks
           command: ["/webhooks"]
-          image: quay.io/operator-framework/rukpak:v0.8.0
+          image: quay.io/operator-framework/rukpak:main
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
@@ -32,4 +32,4 @@ spec:
         - name: cert
           secret:
             defaultMode: 420
-            secretName: rukpak-webhook-certificate
+            secretName: platform-operators-rukpak-webhook-tls

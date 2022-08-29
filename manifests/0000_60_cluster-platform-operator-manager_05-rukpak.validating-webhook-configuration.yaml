@@ -2,8 +2,8 @@ apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
   annotations:
-    cert-manager.io/inject-ca-from: openshift-platform-operators/platform-operators-rukpak-webhook-certificate
     release.openshift.io/feature-gate: TechPreviewNoUpgrade
+    service.beta.openshift.io/inject-cabundle: "true"
   name: platform-operators-rukpak-validating-webhook-configuration
 webhooks:
 - admissionReviewVersions:
