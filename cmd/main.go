@@ -36,7 +36,6 @@ import (
 
 	platformv1alpha1 "github.com/openshift/api/platform/v1alpha1"
 	"github.com/openshift/platform-operators/controllers"
-	"github.com/openshift/platform-operators/internal/applier"
 	"github.com/openshift/platform-operators/internal/clusteroperator"
 	"github.com/openshift/platform-operators/internal/sourcer"
 	//+kubebuilder:scaffold:imports
@@ -88,9 +87,7 @@ func main() {
 
 	if err = (&controllers.PlatformOperatorReconciler{
 		Client:  mgr.GetClient(),
-		Scheme:  mgr.GetScheme(),
 		Sourcer: sourcer.NewCatalogSourceHandler(mgr.GetClient()),
-		Applier: applier.NewBundleDeploymentHandler(mgr.GetClient()),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "PlatformOperator")
 		os.Exit(1)

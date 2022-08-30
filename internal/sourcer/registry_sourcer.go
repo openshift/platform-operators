@@ -54,15 +54,12 @@ func (cs catalogSource) Source(ctx context.Context, po *platformv1alpha1.Platfor
 }
 
 func (s sources) GetCandidates(ctx context.Context, po *platformv1alpha1.PlatformOperator) (bundles, error) {
+	// TODO(tflannag): This doesn't account for edge case where there are zero sources.
 	if len(s) != 1 {
 		return nil, fmt.Errorf("validation error: only a single catalog source is supported during phase 0")
 	}
 	cs := s[0]
 
-	// TODO(tflannag): Should build a cache for efficiency.
-	// Note(tflannag): Need to account for grpc-based CatalogSource(s) that
-	// specify a spec.Address or a spec.Image, so ensure this field exists, and
-	// it's not empty before creating a registry client.
 	rc, err := registryClient.NewClient(cs.Status.GRPCConnectionState.Address)
 	if err != nil {
 		return nil, fmt.Errorf("failed to register client from the %s/%s grpc connection: %w", cs.GetName(), cs.GetNamespace(), err)
