@@ -14,7 +14,8 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	platformv1alpha1 "github.com/openshift/platform-operators/api/v1alpha1"
+	platformv1alpha1 "github.com/openshift/api/platform/v1alpha1"
+	platformtypes "github.com/openshift/platform-operators/api/v1alpha1"
 )
 
 const (
@@ -61,7 +62,9 @@ var _ = Describe("platform operators controller", func() {
 						GenerateName: "prometheus-operator",
 					},
 					Spec: platformv1alpha1.PlatformOperatorSpec{
-						PackageName: "prometheus-operator",
+						Package: platformv1alpha1.Package{
+							Name: "prometheus-operator",
+						},
 					},
 				}
 				Expect(c.Create(ctx, po)).To(BeNil())
@@ -107,7 +110,9 @@ var _ = Describe("platform operators controller", func() {
 						GenerateName: "prometheus-operator",
 					},
 					Spec: platformv1alpha1.PlatformOperatorSpec{
-						PackageName: "prometheus-operator",
+						Package: platformv1alpha1.Package{
+							Name: "prometheus-operator",
+						},
 					},
 				}
 				Expect(c.Create(ctx, po)).To(BeNil())
@@ -144,12 +149,12 @@ var _ = Describe("platform operators controller", func() {
 					if err := c.Get(ctx, client.ObjectKeyFromObject(po), po); err != nil {
 						return nil, err
 					}
-					return meta.FindStatusCondition(po.Status.Conditions, platformv1alpha1.TypeApplied), nil
+					return meta.FindStatusCondition(po.Status.Conditions, platformtypes.TypeApplied), nil
 				}).Should(And(
 					Not(BeNil()),
-					WithTransform(func(c *metav1.Condition) string { return c.Type }, Equal(platformv1alpha1.TypeApplied)),
+					WithTransform(func(c *metav1.Condition) string { return c.Type }, Equal(platformtypes.TypeApplied)),
 					WithTransform(func(c *metav1.Condition) metav1.ConditionStatus { return c.Status }, Equal(metav1.ConditionTrue)),
-					WithTransform(func(c *metav1.Condition) string { return c.Reason }, Equal(platformv1alpha1.ReasonApplySuccessful)),
+					WithTransform(func(c *metav1.Condition) string { return c.Reason }, Equal(platformtypes.ReasonApplySuccessful)),
 					WithTransform(func(c *metav1.Condition) string { return c.Message }, ContainSubstring("Successfully applied the desired olm.bundle content")),
 				))
 			})

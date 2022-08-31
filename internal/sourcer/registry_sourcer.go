@@ -9,7 +9,7 @@ import (
 	utilerror "k8s.io/apimachinery/pkg/util/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	platformv1alpha1 "github.com/openshift/platform-operators/api/v1alpha1"
+	platformv1alpha1 "github.com/openshift/api/platform/v1alpha1"
 )
 
 const (
@@ -41,7 +41,7 @@ func (cs catalogSource) Source(ctx context.Context, po *platformv1alpha1.Platfor
 		return nil, err
 	}
 	if len(candidates) == 0 {
-		return nil, fmt.Errorf("failed to find candidate olm.bundles from the %s package", po.Spec.PackageName)
+		return nil, fmt.Errorf("failed to find candidate olm.bundles from the %s package", po.Spec.Package.Name)
 	}
 	latestBundle, err := candidates.Latest()
 	if err != nil {
@@ -72,7 +72,7 @@ func (s sources) GetCandidates(ctx context.Context, po *platformv1alpha1.Platfor
 			continue
 		}
 		for b := it.Next(); b != nil; b = it.Next() {
-			if b.PackageName != po.Spec.PackageName || b.ChannelName != channelName {
+			if b.PackageName != po.Spec.Package.Name || b.ChannelName != channelName {
 				continue
 			}
 			candidates = append(candidates, Bundle{

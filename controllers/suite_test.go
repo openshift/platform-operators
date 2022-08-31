@@ -28,7 +28,7 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	platformv1alpha1 "github.com/openshift/platform-operators/api/v1alpha1"
+	platformv1alpha1 "github.com/openshift/api/platform/v1alpha1"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -57,7 +57,7 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	Expect(cfg).NotTo(BeNil())
 
-	err = platformv1alpha1.AddToScheme(scheme.Scheme)
+	err = platformv1alpha1.Install(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 
 	//+kubebuilder:scaffold:scheme

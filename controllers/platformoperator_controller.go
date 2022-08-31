@@ -30,7 +30,8 @@ import (
 	logr "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
-	platformv1alpha1 "github.com/openshift/platform-operators/api/v1alpha1"
+	platformv1alpha1 "github.com/openshift/api/platform/v1alpha1"
+	platformtypes "github.com/openshift/platform-operators/api/v1alpha1"
 	"github.com/openshift/platform-operators/internal/applier"
 	"github.com/openshift/platform-operators/internal/sourcer"
 	"github.com/openshift/platform-operators/internal/util"
@@ -77,33 +78,33 @@ func (r *PlatformOperatorReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	desiredBundle, err := r.Sourcer.Source(ctx, po)
 	if err != nil {
 		meta.SetStatusCondition(&po.Status.Conditions, metav1.Condition{
-			Type:    platformv1alpha1.TypeSourced,
+			Type:    platformtypes.TypeSourced,
 			Status:  metav1.ConditionUnknown,
-			Reason:  platformv1alpha1.ReasonSourceFailed,
+			Reason:  platformtypes.ReasonSourceFailed,
 			Message: err.Error(),
 		})
 		return ctrl.Result{}, err
 	}
 	meta.SetStatusCondition(&po.Status.Conditions, metav1.Condition{
-		Type:    platformv1alpha1.TypeSourced,
+		Type:    platformtypes.TypeSourced,
 		Status:  metav1.ConditionTrue,
-		Reason:  platformv1alpha1.ReasonSourceSuccessful,
+		Reason:  platformtypes.ReasonSourceSuccessful,
 		Message: "Successfully sourced the desired olm.bundle content",
 	})
 
 	if err := r.Applier.Apply(ctx, po, desiredBundle); err != nil {
 		meta.SetStatusCondition(&po.Status.Conditions, metav1.Condition{
-			Type:    platformv1alpha1.TypeApplied,
+			Type:    platformtypes.TypeApplied,
 			Status:  metav1.ConditionUnknown,
-			Reason:  platformv1alpha1.ReasonApplyFailed,
+			Reason:  platformtypes.ReasonApplyFailed,
 			Message: err.Error(),
 		})
 		return ctrl.Result{}, err
 	}
 	meta.SetStatusCondition(&po.Status.Conditions, metav1.Condition{
-		Type:    platformv1alpha1.TypeApplied,
+		Type:    platformtypes.TypeApplied,
 		Status:  metav1.ConditionTrue,
-		Reason:  platformv1alpha1.ReasonApplySuccessful,
+		Reason:  platformtypes.ReasonApplySuccessful,
 		Message: "Successfully applied the desired olm.bundle content",
 	})
 	return ctrl.Result{}, nil

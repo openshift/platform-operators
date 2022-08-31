@@ -33,7 +33,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	platformv1alpha1 "github.com/openshift/platform-operators/api/v1alpha1"
+	platformv1alpha1 "github.com/openshift/api/platform/v1alpha1"
 	"github.com/openshift/platform-operators/controllers"
 	"github.com/openshift/platform-operators/internal/applier"
 	"github.com/openshift/platform-operators/internal/sourcer"
@@ -49,7 +49,7 @@ func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 	utilruntime.Must(operatorsv1alpha1.AddToScheme(scheme))
 	utilruntime.Must(rukpakv1alpha1.AddToScheme(scheme))
-	utilruntime.Must(platformv1alpha1.AddToScheme(scheme))
+	utilruntime.Must(platformv1alpha1.Install(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 

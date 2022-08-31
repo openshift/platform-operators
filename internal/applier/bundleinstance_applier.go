@@ -8,7 +8,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
-	"github.com/openshift/platform-operators/api/v1alpha1"
+	platformv1alpha1 "github.com/openshift/api/platform/v1alpha1"
 	"github.com/openshift/platform-operators/internal/sourcer"
 )
 
@@ -27,7 +27,7 @@ func NewBundleDeploymentHandler(c client.Client) Applier {
 	}
 }
 
-func (a *bdApplier) Apply(ctx context.Context, po *v1alpha1.PlatformOperator, b *sourcer.Bundle) error {
+func (a *bdApplier) Apply(ctx context.Context, po *platformv1alpha1.PlatformOperator, b *sourcer.Bundle) error {
 	bi := &rukpakv1alpha1.BundleDeployment{}
 	bi.SetName(po.GetName())
 	controllerRef := metav1.NewControllerRef(po, po.GroupVersionKind())
