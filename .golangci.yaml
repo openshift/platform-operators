@@ -32,6 +32,10 @@ linters-settings:
       alias: apierrors
     - pkg: github.com/operator-framework/api/pkg/operators/v1alpha1
       alias: operatorsv1alpha1
+    - pkg: github.com/openshift/api/platform/v1alpha1
+      alias: platformv1alpha1
+    - pkg: github.com/openshift/platform-operators/api/v1alpha1
+      alias: platformtypes
   revive:
     rules:
     - name: dot-imports
@@ -42,7 +46,7 @@ linters-settings:
       - github.com/onsi/gomega
       - github.com/onsi/ginkgo
   goimports:
-    local-prefixes: github.com/openshift/platform-operators
+    local-prefixes: github.com/openshift/platform-operators,github.com/openshift/api/platform/v1alpha1
 
 output:
   format: tab
