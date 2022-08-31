@@ -16,10 +16,6 @@ limitations under the License.
 
 package v1alpha1
 
-import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-)
-
 var (
 	TypeSourced = "Sourced"
 	TypeApplied = "Applied"
@@ -29,41 +25,3 @@ var (
 	ReasonApplyFailed      = "ApplyFailed"
 	ReasonApplySuccessful  = "ApplySuccessful"
 )
-
-// PlatformOperatorSpec defines the desired state of PlatformOperator
-type PlatformOperatorSpec struct {
-	// PackageName specifies the name of the package to be installed from the provided CatalogSource.
-	// PackageName is required and must equal the exact name of the package in the catalog.
-	PackageName string `json:"packageName"`
-}
-
-// PlatformOperatorStatus defines the observed state of PlatformOperator
-type PlatformOperatorStatus struct {
-	Conditions []metav1.Condition `json:"conditions,omitempty"`
-}
-
-//+kubebuilder:object:root=true
-//+kubebuilder:subresource:status
-//+kubebuilder:resource:scope=Cluster,shortName={"platform","platforms"}
-
-// PlatformOperator is the Schema for the platformoperators API
-type PlatformOperator struct {
-	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
-
-	Spec   PlatformOperatorSpec   `json:"spec,omitempty"`
-	Status PlatformOperatorStatus `json:"status,omitempty"`
-}
-
-//+kubebuilder:object:root=true
-
-// PlatformOperatorList contains a list of PlatformOperator
-type PlatformOperatorList struct {
-	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []PlatformOperator `json:"items"`
-}
-
-func init() {
-	SchemeBuilder.Register(&PlatformOperator{}, &PlatformOperatorList{})
-}
