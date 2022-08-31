@@ -17,6 +17,11 @@ commonAnnotations:
   release.openshift.io/feature-gate: TechPreviewNoUpgrade
   include.release.openshift.io/self-managed-high-availability: "true"
 
+images:
+- name: quay.io/brancz/kube-rbac-proxy
+  newName: gcr.io/kubebuilder/kube-rbac-proxy
+  newTag: v0.8.0
+
 bases:
 - ../rbac
 - ../manager
