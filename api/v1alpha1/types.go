@@ -17,11 +17,9 @@ limitations under the License.
 package v1alpha1
 
 var (
-	TypeSourced = "Sourced"
 	TypeApplied = "Applied"
 
-	ReasonSourceFailed     = "SourceFailed"
-	ReasonSourceSuccessful = "SourceSuccessful"
-	ReasonApplyFailed      = "ApplyFailed"
-	ReasonApplySuccessful  = "ApplySuccessful"
+	ReasonSourceFailed    = "SourceFailed"
+	ReasonApplyFailed     = "ApplyFailed"
+	ReasonApplySuccessful = "ApplySuccessful"
 )
