@@ -17,7 +17,6 @@ commonAnnotations:
   release.openshift.io/feature-gate: TechPreviewNoUpgrade
 
 bases:
-- ../crd
 - ../rbac
 - ../manager
 - ../rukpak

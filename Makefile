@@ -48,7 +48,6 @@ help: ## Display this help.
 
 .PHONY: generate
 generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
-	$(CONTROLLER_GEN) crd:crdVersions=v1 output:crd:artifacts:config=config/crd/bases paths=./api/...
 	$(CONTROLLER_GEN) object:headerFile=./hack/boilerplate.go.txt paths=./api/...
 	$(CONTROLLER_GEN) rbac:roleName=manager-role paths=./... output:rbac:artifacts:config=config/rbac
 
@@ -89,7 +88,6 @@ manifests: generate kustomize
 
 	@# Move all of the platform operators manifests into the manifests folder
 	$(MV_TMP_DIR)/v1_namespace_openshift-platform-operators.yaml manifests/0000_50_cluster-platform-operator-manager_00-namespace.yaml
-	$(MV_TMP_DIR)/apiextensions.k8s.io_v1_customresourcedefinition_platformoperators.platform.openshift.io.yaml manifests/0000_50_cluster-platform-operator-manager_00-platformoperator.crd.yaml
 	$(MV_TMP_DIR)/v1_serviceaccount_platform-operators-controller-manager.yaml manifests/0000_50_cluster-platform-operator-manager_01-serviceaccount.yaml
 	$(MV_TMP_DIR)/v1_service_platform-operators-controller-manager-metrics-service.yaml manifests/0000_50_cluster-platform-operator-manager_02-metricsservice.yaml
 	$(MV_TMP_DIR)/apps_v1_deployment_platform-operators-controller-manager.yaml manifests/0000_50_cluster-platform-operator-manager_06-deployment.yaml
@@ -152,26 +150,10 @@ kind-load: build-container kind
 kind-cluster: kind
 	$(KIND) get clusters | grep $(KIND_CLUSTER_NAME) || $(KIND) create cluster --name $(KIND_CLUSTER_NAME)
 
-.PHONY: install
-install: generate kustomize ## Install CRDs into the K8s cluster specified in ~/.kube/config.
-	$(KUSTOMIZE) build config/crd | $(KUBECTL) apply -f -
-
-.PHONY: uninstall
-uninstall: generate kustomize ## Uninstall CRDs from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
-	$(KUSTOMIZE) build config/crd | $(KUBECTL) delete --ignore-not-found=$(ignore-not-found) -f -
-
 .PHONY: run
-run: build-container install
+run: build-container
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default | $(KUBECTL) apply -f -
-
-.PHONY: deploy
-deploy: manifests ## Deploy controller to the K8s cluster specified in ~/.kube/config.
-	$(KUBECTL) apply -f manifests
-
-.PHONY: undeploy
-undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
-	$(KUSTOMIZE) build config/default | $($(KUBECTL)) delete --ignore-not-found=$(ignore-not-found) -f -
 
 ##@ Build Dependencies
 
