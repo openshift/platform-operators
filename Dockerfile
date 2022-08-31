@@ -9,7 +9,7 @@ FROM registry.ci.openshift.org/ocp/4.12:base
 COPY manifests /manifests
 # LABEL io.openshift.release.operator=true
 
-COPY --from=builder /build/bin/manager /bin
+COPY --from=builder /build/bin/manager /
 USER 1001
 
 LABEL io.k8s.display-name="OpenShift Platform Operator Manager" \
