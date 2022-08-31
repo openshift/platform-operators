@@ -13,8 +13,8 @@ import (
 )
 
 const (
-	plainProvisionerID    = "core.rukpak.io/plain"
-	registryProvisionerID = "core.rukpak.io/registry"
+	plainProvisionerID    = "core-rukpak-io-plain"
+	registryProvisionerID = "core-rukpak-io-registry"
 )
 
 type bdApplier struct {
