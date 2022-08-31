@@ -1,3 +1,6 @@
+SHELL := /bin/bash
+
+ROOT_DIR := $(patsubst %/,%,$(dir $(realpath $(lastword $(MAKEFILE_LIST)))))
 
 # Image URL to use all building/pushing image targets
 IMG ?= controller:latest
@@ -72,6 +75,9 @@ manifests: generate kustomize
 
 	@# Cleanup the existing manifests so no removed ones linger post generation
 	rm manifests/* || true
+
+	@# Move the vendored PlatformOperator CRD from o/api to the manifests folder
+	cp $(ROOT_DIR)/vendor/github.com/openshift/api/platform/v1alpha1/platformoperators.crd.yaml manifests/0000_50_cluster-platform-operator-manager_00-platformoperator.crd.yaml
 
 	@# Move all of the rukpak manifests into the manifests folder
 	$(MV_TMP_DIR)/apiextensions.k8s.io_v1_customresourcedefinition_bundledeployments.core.rukpak.io.yaml manifests/0000_50_cluster-platform-operator-manager_00-rukpak-bundledeployments.crd.yaml
