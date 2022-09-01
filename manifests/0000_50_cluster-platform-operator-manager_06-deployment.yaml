@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
+    include.release.openshift.io/self-managed-high-availability: "true"
     release.openshift.io/feature-gate: TechPreviewNoUpgrade
   labels:
     control-plane: controller-manager
@@ -15,6 +16,7 @@ spec:
   template:
     metadata:
       annotations:
+        include.release.openshift.io/self-managed-high-availability: "true"
         kubectl.kubernetes.io/default-container: manager
         release.openshift.io/feature-gate: TechPreviewNoUpgrade
       labels:

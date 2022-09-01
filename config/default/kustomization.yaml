@@ -15,6 +15,7 @@ namePrefix: platform-operators-
 # Annotations to add to all resources.
 commonAnnotations:
   release.openshift.io/feature-gate: TechPreviewNoUpgrade
+  include.release.openshift.io/self-managed-high-availability: "true"
 
 bases:
 - ../rbac
