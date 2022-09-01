@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	platformv1alpha1 "github.com/openshift/platform-operators/api/v1alpha1"
+	platformv1alpha1 "github.com/openshift/api/platform/v1alpha1"
 )
 
 type Bundle struct {
