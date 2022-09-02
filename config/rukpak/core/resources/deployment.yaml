@@ -17,8 +17,16 @@ spec:
         kubectl.kubernetes.io/default-container: manager
     spec:
       serviceAccountName: core-admin
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: kube-rbac-proxy
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ "ALL" ]
           image: quay.io/brancz/kube-rbac-proxy:v0.12.0
           args:
             - "--secure-listen-address=0.0.0.0:8443"
@@ -40,6 +48,10 @@ spec:
               mountPath: /etc/configmaps/operator-cert-ca-bundle
               readOnly: false
         - name: manager
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ "ALL" ]
           image: quay.io/operator-framework/rukpak:main
           imagePullPolicy: IfNotPresent
           command: ["/core"]
