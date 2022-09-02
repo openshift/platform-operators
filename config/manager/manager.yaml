@@ -28,6 +28,8 @@ spec:
     spec:
       securityContext:
         runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
       containers:
       - command:
         - /manager
@@ -38,6 +40,8 @@ spec:
         imagePullPolicy: IfNotPresent
         securityContext:
           allowPrivilegeEscalation: false
+          capabilities:
+            drop: [ "ALL" ]
         livenessProbe:
           httpGet:
             path: /healthz
