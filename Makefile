@@ -69,7 +69,7 @@ RBAC_LIST = rbac.authorization.k8s.io_v1_clusterrole_platform-operators-manager-
 
 # Generate manifests e.g. CRD, RBAC etc.
 .PHONY: manifests
-manifests: generate kustomize
+manifests: generate yq kustomize
 	$(KUSTOMIZE) build config/default -o $(TMP_DIR)/
 	ls $(TMP_DIR)
 
@@ -78,6 +78,8 @@ manifests: generate kustomize
 
 	@# Move the vendored PlatformOperator CRD from o/api to the manifests folder
 	cp $(ROOT_DIR)/vendor/github.com/openshift/api/platform/v1alpha1/platformoperators.crd.yaml manifests/0000_50_cluster-platform-operator-manager_00-platformoperator.crd.yaml
+	@# TODO(tflannag): Remove this hack when https://github.com/openshift/api/pull/1282 merges.
+	${YQ} w -d'*' --inplace --style=double manifests/0000_50_cluster-platform-operator-manager_00-platformoperator.crd.yaml 'metadata.annotations['include.release.openshift.io/self-managed-high-availability']' true
 
 	@# Move all of the rukpak manifests into the manifests folder
 	$(MV_TMP_DIR)/apiextensions.k8s.io_v1_customresourcedefinition_bundledeployments.core.rukpak.io.yaml manifests/0000_50_cluster-platform-operator-manager_00-rukpak-bundledeployments.crd.yaml
@@ -175,6 +177,7 @@ ENVTEST ?= $(LOCALBIN)/setup-envtest
 GINKGO ?= $(LOCALBIN)/ginkgo
 GOLANGCI_LINT ?= $(LOCALBIN)/golangci-lint
 KIND ?= $(LOCALBIN)/kind
+YQ ?= $(LOCALBIN)/yq
 
 ## Tool Versions
 KUSTOMIZE_VERSION ?= v3.8.7
@@ -183,6 +186,7 @@ ENVTEST_VERSION ?= latest
 GINKGO_VERSION ?= v2.1.4
 GOLANGCI_LINT_VERSION ?= v1.45.2
 KIND_VERSION ?= v0.14.0
+YQ_VERSION ?= latest
 
 KUSTOMIZE_INSTALL_SCRIPT ?= "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"
 .PHONY: kustomize
@@ -215,3 +219,8 @@ $(GOLANGCI_LINT): $(LOCALBIN) ## Download golangci-lint locally if necessary.
 kind: $(KIND) ## Download kind locally if necessary.
 $(KIND): $(LOCALBIN)
 	GOBIN=$(LOCALBIN) go install $(GO_INSTALL_OPTS) sigs.k8s.io/kind@$(KIND_VERSION)
+
+.PHONY: yq
+yq: $(YQ) ## Download yq locally if necessary.
+$(YQ): $(LOCALBIN)
+	GOBIN=$(LOCALBIN) go install $(GO_INSTALL_OPTS) github.com/mikefarah/yq/v3@$(YQ_VERSION)
