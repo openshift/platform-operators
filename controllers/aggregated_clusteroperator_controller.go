@@ -47,9 +47,9 @@ type AggregatedClusterOperatorReconciler struct {
 
 const aggregateCOName = "platform-operators-aggregated"
 
-//+kubebuilder:rbac:groups=platform.openshift.io,resources=platformoperators,verbs=get;list;watch
-//+kubebuilder:rbac:groups=platform.openshift.io,resources=platformoperators/status,verbs=get
-//+kubebuilder:rbac:groups=config.openshift.io,resources=clusteroperators,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=platform.openshift.io,resources=platformoperators,verbs=list
+//+kubebuilder:rbac:groups=config.openshift.io,resources=clusteroperators,verbs=get
+//+kubebuilder:rbac:groups=config.openshift.io,resources=clusteroperators/status,verbs=update;patch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -71,7 +71,7 @@ func (a *AggregatedClusterOperatorReconciler) Reconcile(ctx context.Context, req
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 	defer func() {
-		if err := coWriter.UpdateStatus(aggregatedCO, coBuilder.GetStatus()); err != nil {
+		if err := coWriter.UpdateStatus(ctx, aggregatedCO, coBuilder.GetStatus()); err != nil {
 			log.Error(err, "error updating CO status")
 		}
 	}()
@@ -89,7 +89,7 @@ func (a *AggregatedClusterOperatorReconciler) Reconcile(ctx context.Context, req
 
 	if len(poList.Items) == 0 {
 		// No POs on cluster, everything is fine
-		coBuilder.WithAvailable(openshiftconfigv1.ConditionTrue, "", "No POs Found")
+		coBuilder.WithAvailable(openshiftconfigv1.ConditionTrue, "", "NoPOsFound")
 		return ctrl.Result{}, nil
 	}
 
@@ -98,11 +98,11 @@ func (a *AggregatedClusterOperatorReconciler) Reconcile(ctx context.Context, req
 		// One of the POs is in an error state
 		// Update the Aggregated CO with the information on the failed PO
 		coBuilder.WithDegraded(openshiftconfigv1.ConditionTrue)
-		coBuilder.WithAvailable(openshiftconfigv1.ConditionFalse, utilerror.NewAggregate(statusErrorCheck.FailingErrors).Error(), "PO In An Error State")
+		coBuilder.WithAvailable(openshiftconfigv1.ConditionFalse, utilerror.NewAggregate(statusErrorCheck.FailingErrors).Error(), "POError")
 		return ctrl.Result{}, nil
 	}
 
-	coBuilder.WithAvailable(openshiftconfigv1.ConditionTrue, "All POs in a successful state", "POs Are Healthy")
+	coBuilder.WithAvailable(openshiftconfigv1.ConditionTrue, "All POs in a successful state", "POsHealthy")
 
 	return ctrl.Result{}, nil
 }
@@ -133,7 +133,7 @@ func (a *AggregatedClusterOperatorReconciler) inspectPlatformOperators(POList *p
 		status := po.Status
 
 		for _, condition := range status.Conditions {
-			if condition.Reason == platformtypes.ReasonSourceFailed || condition.Reason == platformtypes.ReasonApplyFailed {
+			if condition.Reason == platformtypes.ReasonApplyFailed {
 				POstatuses.FailingPOs = append(POstatuses.FailingPOs, po)
 				POstatuses.FailingErrors = append(POstatuses.FailingErrors, errors.New(fmt.Sprintf("%s is failing: %q", po.GetName(), condition.Reason)))
 			}

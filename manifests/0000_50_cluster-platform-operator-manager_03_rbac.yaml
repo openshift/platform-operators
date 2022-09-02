@@ -12,13 +12,14 @@ rules:
   resources:
   - clusteroperators
   verbs:
-  - create
-  - delete
   - get
-  - list
+- apiGroups:
+  - config.openshift.io
+  resources:
+  - clusteroperators/status
+  verbs:
   - patch
   - update
-  - watch
 - apiGroups:
   - core.rukpak.io
   resources:
