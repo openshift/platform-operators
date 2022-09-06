@@ -54,7 +54,7 @@ func (cs catalogSource) Source(ctx context.Context, po *platformv1alpha1.Platfor
 }
 
 func (s sources) GetCandidates(ctx context.Context, po *platformv1alpha1.PlatformOperator) (bundles, error) {
-	if len(s) > 1 {
+	if len(s) != 1 {
 		return nil, fmt.Errorf("validation error: only a single catalog source is supported during phase 0")
 	}
 	cs := s[0]
