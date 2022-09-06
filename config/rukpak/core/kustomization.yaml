@@ -8,6 +8,11 @@ resources:
   - resources/serviceaccount.yaml
   - resources/core_ca_configmap.yaml
 
+images:
+- name: kube-rbac-proxy
+  newName: gcr.io/kubebuilder/kube-rbac-proxy
+  newTag: v0.8.0
+
 vars:
  - name: CORE_SERVICE_NAMESPACE # namespace of the service
    objref:

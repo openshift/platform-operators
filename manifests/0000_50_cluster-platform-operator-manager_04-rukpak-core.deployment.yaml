@@ -32,7 +32,7 @@ spec:
         - --tls-cert-file=/etc/pki/tls/tls.crt
         - --tls-private-key-file=/etc/pki/tls/tls.key
         - --upstream-ca-file=/etc/configmaps/operator-cert-ca-bundle/service-ca.crt
-        image: quay.io/brancz/kube-rbac-proxy:v0.12.0
+        image: gcr.io/kubebuilder/kube-rbac-proxy:v0.8.0
         name: kube-rbac-proxy
         ports:
         - containerPort: 8443
