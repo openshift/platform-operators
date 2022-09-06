@@ -7,7 +7,6 @@ require (
 	github.com/onsi/ginkgo/v2 v2.1.4
 	github.com/onsi/gomega v1.19.0
 	github.com/openshift/api v0.0.0-20220831185921-0ee1471bcabb
-	github.com/openshift/client-go v0.0.0-20220819185518-59c7387c324b
 	github.com/operator-framework/api v0.15.0
 	github.com/operator-framework/operator-registry v1.22.1
 	github.com/operator-framework/rukpak v0.7.0
