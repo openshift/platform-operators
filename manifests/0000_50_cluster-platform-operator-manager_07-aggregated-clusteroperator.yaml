@@ -7,6 +7,7 @@ metadata:
     release.openshift.io/feature-gate: TechPreviewNoUpgrade
   name: platform-operators-aggregated
   namespace: openshift-platform-operators
+spec: {}
 status:
   versions:
   - name: operator
