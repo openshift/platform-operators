@@ -79,6 +79,7 @@ func (a *AggregatedClusterOperatorReconciler) Reconcile(ctx context.Context, req
 	if len(poList.Items) == 0 {
 		// No POs on cluster, everything is fine
 		coBuilder.WithAvailable(openshiftconfigv1.ConditionTrue, "No POs are present in the cluster", "NoPOsFound")
+		coBuilder.WithProgressing(openshiftconfigv1.ConditionTrue, "No POs are present in the cluster")
 		return ctrl.Result{}, nil
 	}
 
@@ -100,6 +101,6 @@ func (a *AggregatedClusterOperatorReconciler) SetupWithManager(mgr ctrl.Manager)
 		For(&openshiftconfigv1.ClusterOperator{}, builder.WithPredicates(predicate.NewPredicateFuncs(func(object client.Object) bool {
 			return object.GetName() == aggregateCOName
 		}))).
-		Watches(&source.Kind{Type: &platformv1alpha1.PlatformOperator{}}, handler.EnqueueRequestsFromMapFunc(util.RequeueBundleDeployment(mgr.GetClient()))).
+		Watches(&source.Kind{Type: &platformv1alpha1.PlatformOperator{}}, handler.EnqueueRequestsFromMapFunc(util.RequeueClusterOperator(mgr.GetClient(), aggregateCOName))).
 		Complete(a)
 }

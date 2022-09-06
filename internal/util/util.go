@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	configv1 "github.com/openshift/api/config/v1"
 	rukpakv1alpha1 "github.com/operator-framework/rukpak/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -59,6 +60,17 @@ func RequeueBundleDeployment(c client.Client) handler.MapFunc {
 			}
 		}
 		return requests
+	}
+}
+
+func RequeueClusterOperator(c client.Client, name string) handler.MapFunc {
+	return func(obj client.Object) []reconcile.Request {
+		co := &configv1.ClusterOperator{}
+
+		if err := c.Get(context.Background(), types.NamespacedName{Name: name}, co); err != nil {
+			return nil
+		}
+		return []reconcile.Request{{NamespacedName: client.ObjectKeyFromObject(co)}}
 	}
 }
 
