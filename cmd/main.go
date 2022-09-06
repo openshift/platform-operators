@@ -25,7 +25,6 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	openshiftconfigv1 "github.com/openshift/api/config/v1"
-	configv1client "github.com/openshift/client-go/config/clientset/versioned/typed/config/v1"
 	operatorsv1alpha1 "github.com/operator-framework/api/pkg/operators/v1alpha1"
 	rukpakv1alpha1 "github.com/operator-framework/rukpak/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -99,8 +98,7 @@ func main() {
 
 	// Add Aggregated CO controller to manager
 	if err = (&controllers.AggregatedClusterOperatorReconciler{
-		Client:         mgr.GetClient(),
-		Configv1Client: configv1client.NewForConfigOrDie(mgr.GetConfig()),
+		Client: mgr.GetClient(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AggregatedCO")
 		os.Exit(1)

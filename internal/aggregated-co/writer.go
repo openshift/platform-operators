@@ -5,23 +5,22 @@ import (
 	"reflect"
 
 	configv1 "github.com/openshift/api/config/v1"
-	configv1client "github.com/openshift/client-go/config/clientset/versioned/typed/config/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // From https://github.com/operator-framework/operator-lifecycle-manager/pkg/lib/operatorstatus/writer.go
 
 // NewWriter returns a new instance of Writer.
-func NewWriter(client configv1client.ConfigV1Interface) *Writer {
+func NewWriter(client client.Client) *Writer {
 	return &Writer{
-		client: client,
+		Client: client,
 	}
 }
 
 // Writer encapsulates logic for cluster operator object API. It is used to
 // update ClusterOperator resource.
 type Writer struct {
-	client configv1client.ConfigV1Interface
+	client.Client
 }
 
 // UpdateStatus updates the clusteroperator object with the new status specified.
@@ -36,9 +35,8 @@ func (w *Writer) UpdateStatus(ctx context.Context, existing *configv1.ClusterOpe
 	}
 
 	existing.Status = *newStatus
-	if _, err := w.client.ClusterOperators().UpdateStatus(ctx, existing, metav1.UpdateOptions{}); err != nil {
+	if err := w.Status().Update(ctx, existing); err != nil {
 		return err
 	}
-
 	return nil
 }

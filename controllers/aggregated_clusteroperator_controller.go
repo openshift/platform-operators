@@ -22,9 +22,7 @@ import (
 	"fmt"
 
 	openshiftconfigv1 "github.com/openshift/api/config/v1"
-	configv1client "github.com/openshift/client-go/config/clientset/versioned/typed/config/v1"
 	utilerror "k8s.io/apimachinery/pkg/util/errors"
-	"k8s.io/client-go/discovery"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -41,8 +39,6 @@ import (
 
 type AggregatedClusterOperatorReconciler struct {
 	client.Client
-	DiscoveryClient discovery.DiscoveryInterface
-	Configv1Client  configv1client.ConfigV1Interface
 }
 
 const aggregateCOName = "platform-operators-aggregated"
@@ -64,7 +60,7 @@ func (a *AggregatedClusterOperatorReconciler) Reconcile(ctx context.Context, req
 	// Create a CO Builder to build the CO status
 	coBuilder := aggregatedco.NewBuilder()
 	// Create a CO Writer to write to the CO status
-	coWriter := aggregatedco.NewWriter(a.Configv1Client)
+	coWriter := aggregatedco.NewWriter(a.Client)
 
 	aggregatedCO := &openshiftconfigv1.ClusterOperator{}
 	if err := a.Get(ctx, req.NamespacedName, aggregatedCO); err != nil {
