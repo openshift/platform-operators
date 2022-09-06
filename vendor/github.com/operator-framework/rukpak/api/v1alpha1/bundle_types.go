@@ -29,9 +29,11 @@ var (
 type SourceType string
 
 const (
-	SourceTypeImage SourceType = "image"
-	SourceTypeGit   SourceType = "git"
-	SourceTypeLocal SourceType = "local"
+	SourceTypeImage  SourceType = "image"
+	SourceTypeGit    SourceType = "git"
+	SourceTypeLocal  SourceType = "local"
+	SourceTypeUpload SourceType = "upload"
+	SourceTypeHTTP   SourceType = "http"
 
 	TypeUnpacked = "Unpacked"
 
@@ -49,6 +51,7 @@ const (
 
 // BundleSpec defines the desired state of Bundle
 type BundleSpec struct {
+	//+kubebuilder:validation:Pattern:=^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
 	// ProvisionerClassName sets the name of the provisioner that should reconcile this BundleDeployment.
 	ProvisionerClassName string `json:"provisionerClassName"`
 	// Source defines the configuration for the underlying Bundle content.
@@ -64,6 +67,13 @@ type BundleSource struct {
 	Git *GitSource `json:"git,omitempty"`
 	// Local is a reference to a local object in the cluster.
 	Local *LocalSource `json:"local,omitempty"`
+	// Upload is a source that enables this Bundle's content to be uploaded
+	// via Rukpak's bundle upload service. This source type is primarily useful
+	// with bundle development workflows because it enables bundle developers
+	// to inject a local bundle directly into the cluster.
+	Upload *UploadSource `json:"upload,omitempty"`
+	//  HTTP is the remote location that backs the content of this Bundle.
+	HTTP *HTTPSource `json:"http,omitempty"`
 }
 
 type ImageSource struct {
@@ -93,6 +103,13 @@ type LocalSource struct {
 	ConfigMapRef *ConfigMapRef `json:"configMap"`
 }
 
+type HTTPSource struct {
+	// URL is where the bundle contents is.
+	URL string `json:"url"`
+	// Auth configures the authorization method if necessary.
+	Auth Authorization `json:"auth,omitempty"`
+}
+
 type ConfigMapRef struct {
 	Name      string `json:"name"`
 	Namespace string `json:"namespace"`
@@ -114,7 +131,7 @@ type Authorization struct {
 	// Secret contains reference to the secret that has authorization information and is in the namespace that the provisioner is deployed.
 	// The secret is expected to contain `data.username` and `data.password` for the username and password, respectively for http(s) scheme.
 	// Refer to https://kubernetes.io/docs/concepts/configuration/secret/#basic-authentication-secret
-	// The secret is expected to contain `data.ssh-privatekey` and `data.ssh-knownhosts` for the ssh privatekey and the host entry in the known_hosts file respectively for ssh authorization.
+	// For the ssh authorization of the GitSource, the secret is expected to contain `data.ssh-privatekey` and `data.ssh-knownhosts` for the ssh privatekey and the host entry in the known_hosts file respectively.
 	// Refer to https://kubernetes.io/docs/concepts/configuration/secret/#ssh-authentication-secrets
 	Secret corev1.LocalObjectReference `json:"secret,omitempty"`
 	// InsecureSkipVerify controls whether a client verifies the server's certificate chain and host name. If InsecureSkipVerify
@@ -123,6 +140,8 @@ type Authorization struct {
 	// used. This should be used only for testing.
 	InsecureSkipVerify bool `json:"insecureSkipVerify,omitempty"`
 }
+
+type UploadSource struct{}
 
 type ProvisionerID string
 
