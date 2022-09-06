@@ -18,8 +18,6 @@ package controllers
 
 import (
 	"context"
-	"errors"
-	"fmt"
 
 	openshiftconfigv1 "github.com/openshift/api/config/v1"
 	utilerror "k8s.io/apimachinery/pkg/util/errors"
@@ -32,7 +30,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	platformv1alpha1 "github.com/openshift/api/platform/v1alpha1"
-	platformtypes "github.com/openshift/platform-operators/api/v1alpha1"
 	"github.com/openshift/platform-operators/internal/clusteroperator"
 	"github.com/openshift/platform-operators/internal/util"
 )
@@ -89,7 +86,7 @@ func (a *AggregatedClusterOperatorReconciler) Reconcile(ctx context.Context, req
 		return ctrl.Result{}, nil
 	}
 
-	statusErrorCheck := a.inspectPlatformOperators(poList)
+	statusErrorCheck := util.InspectPlatformOperators(poList)
 	if statusErrorCheck != nil {
 		// One of the POs is in an error state
 		// Update the Aggregated CO with the information on the failed PO
@@ -111,35 +108,4 @@ func (a *AggregatedClusterOperatorReconciler) SetupWithManager(mgr ctrl.Manager)
 		}))).
 		Watches(&source.Kind{Type: &platformv1alpha1.PlatformOperator{}}, handler.EnqueueRequestsFromMapFunc(util.RequeueBundleDeployment(mgr.GetClient()))).
 		Complete(a)
-}
-
-type POStatusErrors struct {
-	FailingPOs    []*platformv1alpha1.PlatformOperator
-	FailingErrors []error
-}
-
-// inspectPlatformOperators iterates over all the POs on the cluster
-// and determines whether a PO is in a failing state by inspecting its status.
-// A nil return value indicates no errors were found with the POs provided.
-func (a *AggregatedClusterOperatorReconciler) inspectPlatformOperators(POList *platformv1alpha1.PlatformOperatorList) *POStatusErrors {
-	POstatuses := new(POStatusErrors)
-
-	for _, po := range POList.Items {
-		po := po.DeepCopy()
-		status := po.Status
-
-		for _, condition := range status.Conditions {
-			if condition.Reason == platformtypes.ReasonApplyFailed {
-				POstatuses.FailingPOs = append(POstatuses.FailingPOs, po)
-				POstatuses.FailingErrors = append(POstatuses.FailingErrors, errors.New(fmt.Sprintf("%s is failing: %q", po.GetName(), condition.Reason)))
-			}
-		}
-	}
-
-	// check if any POs were populated in the POStatusErrors type
-	if len(POstatuses.FailingPOs) > 0 || len(POstatuses.FailingErrors) > 0 {
-		return POstatuses
-	}
-
-	return nil
 }

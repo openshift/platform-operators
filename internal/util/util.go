@@ -2,6 +2,7 @@ package util
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	rukpakv1alpha1 "github.com/operator-framework/rukpak/api/v1alpha1"
@@ -12,6 +13,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	platformv1alpha1 "github.com/openshift/api/platform/v1alpha1"
+	platformtypes "github.com/openshift/platform-operators/api/v1alpha1"
 )
 
 var (
@@ -58,4 +60,35 @@ func RequeueBundleDeployment(c client.Client) handler.MapFunc {
 		}
 		return requests
 	}
+}
+
+type POStatusErrors struct {
+	FailingPOs    []*platformv1alpha1.PlatformOperator
+	FailingErrors []error
+}
+
+// InspectPlatformOperators iterates over all the POs on the cluster
+// and determines whether a PO is in a failing state by inspecting its status.
+// A nil return value indicates no errors were found with the POs provided.
+func InspectPlatformOperators(POList *platformv1alpha1.PlatformOperatorList) *POStatusErrors {
+	POstatuses := new(POStatusErrors)
+
+	for _, po := range POList.Items {
+		po := po.DeepCopy()
+		status := po.Status
+
+		for _, condition := range status.Conditions {
+			if condition.Reason == platformtypes.ReasonApplyFailed {
+				POstatuses.FailingPOs = append(POstatuses.FailingPOs, po)
+				POstatuses.FailingErrors = append(POstatuses.FailingErrors, fmt.Errorf("%s is failing: %q", po.GetName(), condition.Reason))
+			}
+		}
+	}
+
+	// check if any POs were populated in the POStatusErrors type
+	if len(POstatuses.FailingPOs) > 0 || len(POstatuses.FailingErrors) > 0 {
+		return POstatuses
+	}
+
+	return nil
 }
