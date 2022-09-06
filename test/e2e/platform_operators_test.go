@@ -40,7 +40,7 @@ var _ = Describe("platform operators controller", func() {
 	// already for 20/30s sometimes.
 	When("sourcing content from a single catalogsource", func() {
 		var (
-			catalog MagicCatalog
+			catalog *MagicCatalog
 		)
 		BeforeEach(func() {
 			provider, err := NewFileBasedFiledBasedCatalogProvider(filepath.Join(dataBaseDir, "prometheus.v0.1.0.yaml"))
