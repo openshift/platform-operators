@@ -6,6 +6,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	configv1 "github.com/openshift/api/config/v1"
 	operatorsv1alpha1 "github.com/operator-framework/api/pkg/operators/v1alpha1"
 	rukpakv1alpha1 "github.com/operator-framework/rukpak/api/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
@@ -43,6 +44,9 @@ var _ = BeforeSuite(func() {
 	Expect(err).To(BeNil())
 
 	err = corev1.AddToScheme(scheme)
+	Expect(err).To(BeNil())
+
+	err = configv1.AddToScheme(scheme)
 	Expect(err).To(BeNil())
 
 	c, err = client.New(cfg, client.Options{Scheme: scheme})
