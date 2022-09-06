@@ -124,8 +124,9 @@ unit: generate envtest ## Run unit tests.
 e2e: deploy test-e2e
 
 .PHONY: test-e2e
+FOCUS := $(if $(TEST),-v -focus "$(TEST)")
 test-e2e: ginkgo ## Run e2e tests
-	$(GINKGO) -trace -progress test/e2e
+	$(GINKGO) -trace -progress $(FOCUS) test/e2e
 
 .PHONY: verify
 verify: tidy manifests
