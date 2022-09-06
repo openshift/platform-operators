@@ -18,6 +18,7 @@ package v1alpha1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 var (
@@ -26,29 +27,30 @@ var (
 )
 
 const (
-	TypeHasValidBundle       = "HasValidBundle"
-	TypeInvalidBundleContent = "InvalidBundleContent"
-	TypeInstalled            = "Installed"
+	TypeHasValidBundle = "HasValidBundle"
+	TypeInstalled      = "Installed"
 
-	ReasonBundleLookupFailed         = "BundleLookupFailed"
-	ReasonBundleLoadFailed           = "BundleLoadFailed"
-	ReasonReadingContentFailed       = "ReadingContentFailed"
-	ReasonErrorGettingClient         = "ErrorGettingClient"
-	ReasonErrorGettingReleaseState   = "ErrorGettingReleaseState"
-	ReasonInstallFailed              = "InstallFailed"
-	ReasonUpgradeFailed              = "UpgradeFailed"
-	ReasonReconcileFailed            = "ReconcileFailed"
-	ReasonCreateDynamicWatchFailed   = "CreateDynamicWatchFailed"
-	ReasonInstallationSucceeded      = "InstallationSucceeded"
-	ReasonMaxGeneratedBundlesReached = "MaxGenerationReached"
+	ReasonBundleLoadFailed         = "BundleLoadFailed"
+	ReasonReadingContentFailed     = "ReadingContentFailed"
+	ReasonErrorGettingClient       = "ErrorGettingClient"
+	ReasonErrorGettingReleaseState = "ErrorGettingReleaseState"
+	ReasonInstallFailed            = "InstallFailed"
+	ReasonUpgradeFailed            = "UpgradeFailed"
+	ReasonReconcileFailed          = "ReconcileFailed"
+	ReasonCreateDynamicWatchFailed = "CreateDynamicWatchFailed"
+	ReasonInstallationSucceeded    = "InstallationSucceeded"
 )
 
 // BundleDeploymentSpec defines the desired state of BundleDeployment
 type BundleDeploymentSpec struct {
+	//+kubebuilder:validation:Pattern:=^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
 	// ProvisionerClassName sets the name of the provisioner that should reconcile this BundleDeployment.
 	ProvisionerClassName string `json:"provisionerClassName"`
 	// Template describes the generated Bundle that this deployment will manage.
 	Template *BundleTemplate `json:"template"`
+	// Config is provisioner specific configurations
+	// +kubebuilder:pruning:PreserveUnknownFields
+	Config runtime.RawExtension `json:"config,omitempty"`
 }
 
 // BundleTemplate defines the desired state of a Bundle resource
@@ -64,8 +66,9 @@ type BundleTemplate struct {
 
 // BundleDeploymentStatus defines the observed state of BundleDeployment
 type BundleDeploymentStatus struct {
-	Conditions   []metav1.Condition `json:"conditions,omitempty"`
-	ActiveBundle string             `json:"activeBundle,omitempty"`
+	Conditions         []metav1.Condition `json:"conditions,omitempty"`
+	ActiveBundle       string             `json:"activeBundle,omitempty"`
+	ObservedGeneration int64              `json:"observedGeneration,omitempty"`
 }
 
 //+kubebuilder:object:root=true
