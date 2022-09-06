@@ -22,4 +22,5 @@ var (
 	ReasonSourceFailed    = "SourceFailed"
 	ReasonApplyFailed     = "ApplyFailed"
 	ReasonApplySuccessful = "ApplySuccessful"
+	ReasonApplyPending    = "ApplyPending"
 )

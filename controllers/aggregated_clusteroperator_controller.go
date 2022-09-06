@@ -20,7 +20,6 @@ import (
 	"context"
 
 	openshiftconfigv1 "github.com/openshift/api/config/v1"
-	utilerror "k8s.io/apimachinery/pkg/util/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -87,7 +86,7 @@ func (a *AggregatedClusterOperatorReconciler) Reconcile(ctx context.Context, req
 	// any failing status states, and update the aggregate CO resource
 	// to reflect those failing PO resources.
 	if statusErrorCheck := util.InspectPlatformOperators(poList); statusErrorCheck != nil {
-		coBuilder.WithAvailable(openshiftconfigv1.ConditionFalse, utilerror.NewAggregate(statusErrorCheck.FailingErrors).Error(), "POError")
+		coBuilder.WithAvailable(openshiftconfigv1.ConditionFalse, statusErrorCheck.Error(), "POError")
 		return ctrl.Result{}, nil
 	}
 	coBuilder.WithAvailable(openshiftconfigv1.ConditionTrue, "All POs in a successful state", "POsHealthy")

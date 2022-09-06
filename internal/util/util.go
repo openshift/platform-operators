@@ -7,7 +7,10 @@ import (
 
 	configv1 "github.com/openshift/api/config/v1"
 	rukpakv1alpha1 "github.com/operator-framework/rukpak/api/v1alpha1"
+	"k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	utilerror "k8s.io/apimachinery/pkg/util/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
@@ -74,33 +77,37 @@ func RequeueClusterOperator(c client.Client, name string) handler.MapFunc {
 	}
 }
 
-type POStatusErrors struct {
-	FailingPOs    []*platformv1alpha1.PlatformOperator
-	FailingErrors []error
-}
-
 // InspectPlatformOperators iterates over all the POs on the cluster
 // and determines whether a PO is in a failing state by inspecting its status.
 // A nil return value indicates no errors were found with the POs provided.
-func InspectPlatformOperators(POList *platformv1alpha1.PlatformOperatorList) *POStatusErrors {
-	POstatuses := new(POStatusErrors)
-
+func InspectPlatformOperators(POList *platformv1alpha1.PlatformOperatorList) error {
+	var failingPOs []error
 	for _, po := range POList.Items {
-		po := po.DeepCopy()
-		status := po.Status
-
-		for _, condition := range status.Conditions {
-			if condition.Reason == platformtypes.ReasonApplyFailed {
-				POstatuses.FailingPOs = append(POstatuses.FailingPOs, po)
-				POstatuses.FailingErrors = append(POstatuses.FailingErrors, fmt.Errorf("%s is failing: %q", po.GetName(), condition.Reason))
-			}
+		if err := inspectPlatformOperator(po); err != nil {
+			failingPOs = append(failingPOs, err)
 		}
 	}
-
-	// check if any POs were populated in the POStatusErrors type
-	if len(POstatuses.FailingPOs) > 0 || len(POstatuses.FailingErrors) > 0 {
-		return POstatuses
+	if len(failingPOs) > 0 {
+		return utilerror.NewAggregate(failingPOs)
 	}
-
 	return nil
+}
+
+// inspectPlatformOperator is responsible for inspecting an individual platform
+// operator resource, and determining whether it's reporting any failing conditions.
+// In the case that the PO resource is expressing failing states, then an error
+// will be returned to reflect that.
+func inspectPlatformOperator(po platformv1alpha1.PlatformOperator) error {
+	applied := meta.FindStatusCondition(po.Status.Conditions, platformtypes.TypeApplied)
+	if applied == nil {
+		return buildPOFailureMessage(po.GetName(), platformtypes.ReasonApplyPending)
+	}
+	if applied.Status != metav1.ConditionTrue {
+		return buildPOFailureMessage(po.GetName(), applied.Reason)
+	}
+	return nil
+}
+
+func buildPOFailureMessage(name, reason string) error {
+	return fmt.Errorf("encountered the failing %s platform operator with reason %q", name, reason)
 }
