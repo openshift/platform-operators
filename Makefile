@@ -148,6 +148,10 @@ ifndef ignore-not-found
   ignore-not-found = false
 endif
 
+deploy: export KUBECTL=oc
+deploy:
+	$(ROOT_DIR)/hack/apply-feature-gate.sh
+
 .PHONY: tidy
 tidy:
 	go mod tidy
