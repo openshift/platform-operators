@@ -41,7 +41,7 @@ type AggregatedClusterOperatorReconciler struct {
 const aggregateCOName = "platform-operators-aggregated"
 
 //+kubebuilder:rbac:groups=platform.openshift.io,resources=platformoperators,verbs=list
-//+kubebuilder:rbac:groups=config.openshift.io,resources=clusteroperators,verbs=get
+//+kubebuilder:rbac:groups=config.openshift.io,resources=clusteroperators,verbs=get;list;watch
 //+kubebuilder:rbac:groups=config.openshift.io,resources=clusteroperators/status,verbs=update;patch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
@@ -54,9 +54,7 @@ func (a *AggregatedClusterOperatorReconciler) Reconcile(ctx context.Context, req
 	log.Info("reconciling request", "req", req.NamespacedName)
 	defer log.Info("finished reconciling request", "req", req.NamespacedName)
 
-	// Create a CO Builder to build the CO status
 	coBuilder := clusteroperator.NewBuilder()
-	// Create a CO Writer to write to the CO status
 	coWriter := clusteroperator.NewWriter(a.Client)
 
 	aggregatedCO := &openshiftconfigv1.ClusterOperator{}
@@ -69,32 +67,28 @@ func (a *AggregatedClusterOperatorReconciler) Reconcile(ctx context.Context, req
 		}
 	}()
 
-	// Set the default CO status conditions: Progressing True, Degraded False, Available False
+	// Set the default CO status conditions: Progressing=True, Degraded=False, Available=False
 	coBuilder.WithProgressing(openshiftconfigv1.ConditionTrue, "")
 	coBuilder.WithDegraded(openshiftconfigv1.ConditionFalse)
 	coBuilder.WithAvailable(openshiftconfigv1.ConditionFalse, "", "")
 
 	poList := &platformv1alpha1.PlatformOperatorList{}
 	if err := a.List(ctx, poList); err != nil {
-		log.Error(err, "error listing platformoperators")
 		return ctrl.Result{}, err
 	}
-
 	if len(poList.Items) == 0 {
 		// No POs on cluster, everything is fine
-		coBuilder.WithAvailable(openshiftconfigv1.ConditionTrue, "", "NoPOsFound")
+		coBuilder.WithAvailable(openshiftconfigv1.ConditionTrue, "No POs are present in the cluster", "NoPOsFound")
 		return ctrl.Result{}, nil
 	}
 
-	statusErrorCheck := util.InspectPlatformOperators(poList)
-	if statusErrorCheck != nil {
-		// One of the POs is in an error state
-		// Update the Aggregated CO with the information on the failed PO
-		coBuilder.WithDegraded(openshiftconfigv1.ConditionTrue)
+	// check whether any of the underlying PO resources are reporting
+	// any failing status states, and update the aggregate CO resource
+	// to reflect those failing PO resources.
+	if statusErrorCheck := util.InspectPlatformOperators(poList); statusErrorCheck != nil {
 		coBuilder.WithAvailable(openshiftconfigv1.ConditionFalse, utilerror.NewAggregate(statusErrorCheck.FailingErrors).Error(), "POError")
 		return ctrl.Result{}, nil
 	}
-
 	coBuilder.WithAvailable(openshiftconfigv1.ConditionTrue, "All POs in a successful state", "POsHealthy")
 
 	return ctrl.Result{}, nil
