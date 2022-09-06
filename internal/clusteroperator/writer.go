@@ -1,4 +1,4 @@
-package aggregated_co
+package clusteroperator
 
 import (
 	"context"

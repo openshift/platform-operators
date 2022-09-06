@@ -33,7 +33,7 @@ import (
 
 	platformv1alpha1 "github.com/openshift/api/platform/v1alpha1"
 	platformtypes "github.com/openshift/platform-operators/api/v1alpha1"
-	aggregatedco "github.com/openshift/platform-operators/internal/aggregated-co"
+	"github.com/openshift/platform-operators/internal/clusteroperator"
 	"github.com/openshift/platform-operators/internal/util"
 )
 
@@ -58,9 +58,9 @@ func (a *AggregatedClusterOperatorReconciler) Reconcile(ctx context.Context, req
 	defer log.Info("finished reconciling request", "req", req.NamespacedName)
 
 	// Create a CO Builder to build the CO status
-	coBuilder := aggregatedco.NewBuilder()
+	coBuilder := clusteroperator.NewBuilder()
 	// Create a CO Writer to write to the CO status
-	coWriter := aggregatedco.NewWriter(a.Client)
+	coWriter := clusteroperator.NewWriter(a.Client)
 
 	aggregatedCO := &openshiftconfigv1.ClusterOperator{}
 	if err := a.Get(ctx, req.NamespacedName, aggregatedCO); err != nil {
