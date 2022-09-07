@@ -100,7 +100,7 @@ func InspectPlatformOperators(POList *platformv1alpha1.PlatformOperatorList) err
 func inspectPlatformOperator(po platformv1alpha1.PlatformOperator) error {
 	applied := meta.FindStatusCondition(po.Status.Conditions, platformtypes.TypeApplied)
 	if applied == nil {
-		return buildPOFailureMessage(po.GetName(), platformtypes.ReasonApplyPending)
+		return buildPOFailureMessage(po.GetName(), platformtypes.ReasonInstallPending)
 	}
 	if applied.Status != metav1.ConditionTrue {
 		return buildPOFailureMessage(po.GetName(), applied.Reason)

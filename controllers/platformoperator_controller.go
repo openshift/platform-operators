@@ -89,7 +89,7 @@ func (r *PlatformOperatorReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		meta.SetStatusCondition(&po.Status.Conditions, metav1.Condition{
 			Type:    platformtypes.TypeApplied,
 			Status:  metav1.ConditionUnknown,
-			Reason:  platformtypes.ReasonApplyFailed,
+			Reason:  platformtypes.ReasonInstallFailed,
 			Message: err.Error(),
 		})
 		return ctrl.Result{}, err
@@ -97,7 +97,7 @@ func (r *PlatformOperatorReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	meta.SetStatusCondition(&po.Status.Conditions, metav1.Condition{
 		Type:    platformtypes.TypeApplied,
 		Status:  metav1.ConditionTrue,
-		Reason:  platformtypes.ReasonApplySuccessful,
+		Reason:  platformtypes.ReasonInstallSuccessful,
 		Message: "Successfully applied the desired olm.bundle content",
 	})
 	return ctrl.Result{}, nil

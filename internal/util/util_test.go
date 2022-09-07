@@ -27,7 +27,7 @@ func Test_inspectPlatformOperator(t *testing.T) {
 							{
 								Type:   platformtypes.TypeApplied,
 								Status: metav1.ConditionTrue,
-								Reason: platformtypes.ReasonApplySuccessful,
+								Reason: platformtypes.ReasonInstallSuccessful,
 							},
 						},
 					},
@@ -55,7 +55,7 @@ func Test_inspectPlatformOperator(t *testing.T) {
 							{
 								Type:   platformtypes.TypeApplied,
 								Status: metav1.ConditionFalse,
-								Reason: platformtypes.ReasonApplyFailed,
+								Reason: platformtypes.ReasonInstallFailed,
 							},
 						},
 					},
