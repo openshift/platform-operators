@@ -1,10 +1,9 @@
 package clusteroperator
 
 import (
-	"reflect"
-	"time"
-
 	configv1 "github.com/openshift/api/config/v1"
+	"k8s.io/apimachinery/pkg/api/equality"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -13,7 +12,13 @@ import (
 
 // NewBuilder returns a builder for ClusterOperatorStatus.
 func NewBuilder() *Builder {
-	return &Builder{}
+	return &Builder{
+		status: &configv1.ClusterOperatorStatus{
+			Conditions:     []configv1.ClusterOperatorStatusCondition{},
+			Versions:       []configv1.OperandVersion{},
+			RelatedObjects: []configv1.ObjectReference{},
+		},
+	}
 }
 
 // Builder helps build ClusterOperatorStatus with appropriate
@@ -23,232 +28,119 @@ type Builder struct {
 }
 
 // GetStatus returns the ClusterOperatorStatus built.
-func (b *Builder) GetStatus() *configv1.ClusterOperatorStatus {
-	return b.status
+func (b *Builder) GetStatus() configv1.ClusterOperatorStatus {
+	return *b.status
 }
 
 // WithProgressing sets an OperatorProgressing type condition.
-func (b *Builder) WithProgressing(status configv1.ConditionStatus, message string) *Builder {
-	b.init()
-
-	// check for equality first, before modifying
-	for _, cond := range b.status.Conditions {
-		if cond.Type == configv1.OperatorProgressing && cond.Status == status && cond.Message == message {
-			return b
-		}
-	}
-
-	condition := &configv1.ClusterOperatorStatusCondition{
-		Type:               configv1.OperatorProgressing,
-		Status:             status,
-		Message:            message,
-		LastTransitionTime: metav1.NewTime(time.Now()),
-	}
-
-	b.setCondition(condition)
-
-	return b
+func (b *Builder) WithProgressing(status metav1.ConditionStatus, reason, message string) *Builder {
+	return b.withCondition(string(configv1.OperatorProgressing), status, reason, message)
 }
 
 // WithDegraded sets an OperatorDegraded type condition.
-// TODO: update to set Reason as well
-func (b *Builder) WithDegraded(status configv1.ConditionStatus) *Builder {
-	b.init()
-
-	// check for equality first, before modifying
-	for _, cond := range b.status.Conditions {
-		if cond.Type == configv1.OperatorDegraded && cond.Status == status {
-			return b
-		}
-	}
-
-	condition := &configv1.ClusterOperatorStatusCondition{
-		Type:               configv1.OperatorDegraded,
-		Status:             status,
-		LastTransitionTime: metav1.NewTime(time.Now()),
-	}
-
-	b.setCondition(condition)
-
-	return b
+func (b *Builder) WithDegraded(status metav1.ConditionStatus, reason, message string) *Builder {
+	return b.withCondition(string(configv1.OperatorDegraded), status, reason, message)
 }
 
 // WithAvailable sets an OperatorAvailable type condition.
-func (b *Builder) WithAvailable(status configv1.ConditionStatus, message, reason string) *Builder {
-	b.init()
+func (b *Builder) WithAvailable(status metav1.ConditionStatus, reason, message string) *Builder {
+	return b.withCondition(string(configv1.OperatorAvailable), status, reason, message)
+}
 
-	// check for equality first, before modifying
-	for _, cond := range b.status.Conditions {
-		if cond.Type == configv1.OperatorAvailable && cond.Status == status && cond.Message == message && cond.Reason == reason {
-			return b
-		}
-	}
+// WithUpgradeable sets an OperatorUpgradeable type condition.
+func (b *Builder) WithUpgradeable(status metav1.ConditionStatus, reason, message string) *Builder {
+	return b.withCondition(string(configv1.OperatorUpgradeable), status, reason, message)
+}
 
-	condition := &configv1.ClusterOperatorStatusCondition{
-		Type:               configv1.OperatorAvailable,
-		Status:             status,
-		Message:            message,
-		Reason:             reason,
-		LastTransitionTime: metav1.NewTime(time.Now()),
-	}
-
-	b.setCondition(condition)
+func (b *Builder) withCondition(typ string, status metav1.ConditionStatus, reason, message string) *Builder {
+	conditions := convertToMetaV1Conditions(b.status.Conditions)
+	meta.SetStatusCondition(&conditions, metav1.Condition{
+		Type:    typ,
+		Status:  status,
+		Reason:  reason,
+		Message: message,
+	})
+	b.status.Conditions = convertToClusterOperatorConditions(conditions)
 
 	return b
 }
 
-// WithUpgradeable sets an OperatorUpgradeable type condition.
-func (b *Builder) WithUpgradeable(status configv1.ConditionStatus, message string) *Builder {
-	b.init()
-
-	// check for equality first, before modifying
-	for _, cond := range b.status.Conditions {
-		if cond.Type == configv1.OperatorUpgradeable && cond.Status == status && cond.Message == message {
-			return b
-		}
+func convertToMetaV1Conditions(in []configv1.ClusterOperatorStatusCondition) []metav1.Condition {
+	out := make([]metav1.Condition, 0, len(in))
+	for _, c := range in {
+		out = append(out, metav1.Condition{
+			Type:               string(c.Type),
+			Status:             metav1.ConditionStatus(c.Status),
+			Reason:             c.Reason,
+			Message:            c.Message,
+			LastTransitionTime: c.LastTransitionTime,
+		})
 	}
+	return out
+}
 
-	condition := &configv1.ClusterOperatorStatusCondition{
-		Type:               configv1.OperatorUpgradeable,
-		Status:             status,
-		Message:            message,
-		LastTransitionTime: metav1.NewTime(time.Now()),
+func convertToClusterOperatorConditions(in []metav1.Condition) []configv1.ClusterOperatorStatusCondition {
+	out := make([]configv1.ClusterOperatorStatusCondition, 0, len(in))
+	for _, c := range in {
+		out = append(out, configv1.ClusterOperatorStatusCondition{
+			Type:               configv1.ClusterStatusConditionType(c.Type),
+			Status:             configv1.ConditionStatus(c.Status),
+			Reason:             c.Reason,
+			Message:            c.Message,
+			LastTransitionTime: c.LastTransitionTime,
+		})
 	}
-
-	b.setCondition(condition)
-
-	return b
+	return out
 }
 
 // WithVersion adds the specific version into the status.
 func (b *Builder) WithVersion(name, version string) *Builder {
-	b.init()
-
-	existing := b.findVersion(name)
-	if existing != nil {
-		existing.Version = version
-		return b
+	for i := range b.status.Versions {
+		if b.status.Versions[i].Name == name {
+			b.status.Versions[i].Version = version
+			return b
+		}
 	}
-
-	ov := configv1.OperandVersion{
+	b.status.Versions = append(b.status.Versions, configv1.OperandVersion{
 		Name:    name,
 		Version: version,
-	}
-	b.status.Versions = append(b.status.Versions, ov)
-
+	})
 	return b
 }
 
 // WithoutVersion removes the specified version from the existing status.
-func (b *Builder) WithoutVersion(name, version string) *Builder {
-	b.init()
-
-	versions := make([]configv1.OperandVersion, 0)
-
-	for _, v := range b.status.Versions {
+func (b *Builder) WithoutVersion(name string) *Builder {
+	out := b.status.Versions[:0]
+	for i, v := range b.status.Versions {
 		if v.Name == name {
 			continue
 		}
-
-		versions = append(versions, v)
+		out[i] = v
 	}
-
-	b.status.Versions = versions
+	b.status.Versions = out
 	return b
 }
 
 // WithRelatedObject adds the reference specified to the RelatedObjects list.
-func (b *Builder) WithRelatedObject(group, resource, namespace, name string) *Builder {
-	b.init()
-
-	reference := configv1.ObjectReference{
-		Group:     group,
-		Resource:  resource,
-		Namespace: namespace,
-		Name:      name,
+func (b *Builder) WithRelatedObject(reference configv1.ObjectReference) *Builder {
+	for i := range b.status.RelatedObjects {
+		if equality.Semantic.DeepEqual(b.status.RelatedObjects[i], reference) {
+			return b
+		}
 	}
-
-	b.setRelatedObject(reference)
-
+	b.status.RelatedObjects = append(b.status.RelatedObjects, reference)
 	return b
 }
 
 // WithoutRelatedObject removes the reference specified from the RelatedObjects list.
-func (b *Builder) WithoutRelatedObject(group, resource, namespace, name string) *Builder {
-	b.init()
-
-	reference := configv1.ObjectReference{
-		Group:     group,
-		Resource:  resource,
-		Namespace: namespace,
-		Name:      name,
-	}
-
-	related := make([]configv1.ObjectReference, 0)
-	for i := range b.status.RelatedObjects {
-		if reflect.DeepEqual(b.status.RelatedObjects[i], reference) {
+func (b *Builder) WithoutRelatedObject(reference configv1.ObjectReference) *Builder {
+	related := b.status.RelatedObjects[:0]
+	for i, ro := range b.status.RelatedObjects {
+		if equality.Semantic.DeepEqual(b.status.RelatedObjects[i], reference) {
 			continue
 		}
-
-		related = append(related, b.status.RelatedObjects[i])
+		related[i] = ro
 	}
-
 	b.status.RelatedObjects = related
 	return b
-}
-
-func (b *Builder) init() {
-	if b.status == nil {
-		b.status = &configv1.ClusterOperatorStatus{
-			Conditions:     []configv1.ClusterOperatorStatusCondition{},
-			Versions:       []configv1.OperandVersion{},
-			RelatedObjects: []configv1.ObjectReference{},
-		}
-	}
-}
-
-func (b *Builder) findCondition(conditionType configv1.ClusterStatusConditionType) *configv1.ClusterOperatorStatusCondition {
-	for i := range b.status.Conditions {
-		if b.status.Conditions[i].Type == conditionType {
-			return &b.status.Conditions[i]
-		}
-	}
-
-	return nil
-}
-
-func (b *Builder) setCondition(condition *configv1.ClusterOperatorStatusCondition) {
-	existing := b.findCondition(condition.Type)
-	if existing == nil {
-		b.status.Conditions = append(b.status.Conditions, *condition)
-		return
-	}
-
-	existing.Reason = condition.Reason
-	existing.Message = condition.Message
-
-	if existing.Status != condition.Status {
-		existing.Status = condition.Status
-		existing.LastTransitionTime = condition.LastTransitionTime
-	}
-}
-
-func (b *Builder) findVersion(name string) *configv1.OperandVersion {
-	for i := range b.status.Versions {
-		if b.status.Versions[i].Name == name {
-			return &b.status.Versions[i]
-		}
-	}
-
-	return nil
-}
-
-func (b *Builder) setRelatedObject(reference configv1.ObjectReference) {
-	for i := range b.status.RelatedObjects {
-		if reflect.DeepEqual(b.status.RelatedObjects[i], reference) {
-			return
-		}
-	}
-
-	b.status.RelatedObjects = append(b.status.RelatedObjects, reference)
 }

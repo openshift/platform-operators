@@ -84,20 +84,17 @@ func RequeueClusterOperator(c client.Client, name string) handler.MapFunc {
 	}
 }
 
-// InspectPlatformOperators iterates over all the POs on the cluster
+// InspectPlatformOperators iterates over all the POs in the list
 // and determines whether a PO is in a failing state by inspecting its status.
 // A nil return value indicates no errors were found with the POs provided.
-func InspectPlatformOperators(POList *platformv1alpha1.PlatformOperatorList) error {
-	var failingPOs []error
-	for _, po := range POList.Items {
+func InspectPlatformOperators(poList *platformv1alpha1.PlatformOperatorList) error {
+	var poErrors []error
+	for _, po := range poList.Items {
 		if err := inspectPlatformOperator(po); err != nil {
-			failingPOs = append(failingPOs, err)
+			poErrors = append(poErrors, err)
 		}
 	}
-	if len(failingPOs) > 0 {
-		return utilerror.NewAggregate(failingPOs)
-	}
-	return nil
+	return utilerror.NewAggregate(poErrors)
 }
 
 // inspectPlatformOperator is responsible for inspecting an individual platform
