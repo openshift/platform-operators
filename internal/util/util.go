@@ -2,6 +2,7 @@ package util
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 
@@ -18,6 +19,8 @@ import (
 	platformv1alpha1 "github.com/openshift/api/platform/v1alpha1"
 	platformtypes "github.com/openshift/platform-operators/api/v1alpha1"
 )
+
+var ErrPlatformOperatorUnready = errors.New("platform operator unready")
 
 // GetPodNamespace checks whether the controller is running in a Pod vs.
 // being run locally by inspecting the namespace file that gets mounted
@@ -104,16 +107,16 @@ func InspectPlatformOperators(poList *platformv1alpha1.PlatformOperatorList) err
 func inspectPlatformOperator(po platformv1alpha1.PlatformOperator) error {
 	installed := meta.FindStatusCondition(po.Status.Conditions, platformtypes.TypeInstalled)
 	if installed == nil {
-		return buildPOFailureMessage(po.GetName(), platformtypes.ReasonInstallPending)
+		return buildPOMessage(po.GetName(), platformtypes.ReasonInstallPending)
 	}
 	if installed.Status != metav1.ConditionTrue {
-		return buildPOFailureMessage(po.GetName(), installed.Reason)
+		return buildPOMessage(po.GetName(), installed.Reason)
 	}
 	return nil
 }
 
-func buildPOFailureMessage(name, reason string) error {
-	return fmt.Errorf("encountered the failing %s platform operator with reason %q", name, reason)
+func buildPOMessage(name, reason string) error {
+	return fmt.Errorf("%w: %s platform operator has %v reason", ErrPlatformOperatorUnready, name, reason)
 }
 
 // InspectBundleDeployment is responsible for inspecting an individual BD

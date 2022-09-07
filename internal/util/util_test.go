@@ -2,6 +2,8 @@ package util
 
 import (
 	"context"
+	"errors"
+	"strings"
 	"testing"
 
 	rukpakv1alpha1 "github.com/operator-framework/rukpak/api/v1alpha1"
@@ -11,14 +13,14 @@ import (
 	platformtypes "github.com/openshift/platform-operators/api/v1alpha1"
 )
 
-func Test_inspectPlatformOperator(t *testing.T) {
+func TestInspectPlatformOperator(t *testing.T) {
 	type args struct {
 		po platformv1alpha1.PlatformOperator
 	}
 	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
+		name   string
+		args   args
+		reason string
 	}{
 		{
 			name: "HappyPath",
@@ -35,7 +37,7 @@ func Test_inspectPlatformOperator(t *testing.T) {
 					},
 				},
 			},
-			wantErr: false,
+			reason: "",
 		},
 		{
 			name: "NilConditions",
@@ -46,7 +48,7 @@ func Test_inspectPlatformOperator(t *testing.T) {
 					},
 				},
 			},
-			wantErr: true,
+			reason: platformtypes.ReasonInstallPending,
 		},
 		{
 			name: "InstallFailed",
@@ -63,7 +65,7 @@ func Test_inspectPlatformOperator(t *testing.T) {
 					},
 				},
 			},
-			wantErr: true,
+			reason: platformtypes.ReasonInstallFailed,
 		},
 		{
 			name: "SourceFailed",
@@ -80,7 +82,7 @@ func Test_inspectPlatformOperator(t *testing.T) {
 					},
 				},
 			},
-			wantErr: true,
+			reason: platformtypes.ReasonSourceFailed,
 		},
 		{
 			name: "MissingAppliedCondition",
@@ -97,13 +99,17 @@ func Test_inspectPlatformOperator(t *testing.T) {
 					},
 				},
 			},
-			wantErr: true,
+			reason: platformtypes.ReasonInstallPending,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := inspectPlatformOperator(tt.args.po); (err != nil) != tt.wantErr {
-				t.Errorf("inspectPlatformOperator() error = %v, wantErr %v", err, tt.wantErr)
+			if err := inspectPlatformOperator(tt.args.po); err != nil {
+				if !errors.Is(err, ErrPlatformOperatorUnready) {
+					t.Errorf("inspectPlatformOperator() - expected error \"%v\" to wrap \"%v\"", err, ErrPlatformOperatorUnready)
+				} else if !strings.Contains(err.Error(), tt.reason) {
+					t.Errorf("inspectPlatformOperator() - expected error \"%v\" to contain \"%v\"", err, tt.reason)
+				}
 			}
 		})
 	}

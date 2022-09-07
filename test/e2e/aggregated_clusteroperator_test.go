@@ -14,6 +14,11 @@ import (
 	platformv1alpha1 "github.com/openshift/api/platform/v1alpha1"
 	platformtypes "github.com/openshift/platform-operators/api/v1alpha1"
 	"github.com/openshift/platform-operators/internal/clusteroperator"
+	"github.com/openshift/platform-operators/internal/util"
+)
+
+const (
+	aggregateCOName = "platform-operators-aggregated"
 )
 
 var _ = Describe("aggregated clusteroperator controller", func() {
@@ -186,7 +191,7 @@ var _ = Describe("aggregated clusteroperator controller", func() {
 				WithTransform(func(c *configv1.ClusterOperatorStatusCondition) configv1.ClusterStatusConditionType { return c.Type }, Equal(configv1.OperatorAvailable)),
 				WithTransform(func(c *configv1.ClusterOperatorStatusCondition) configv1.ConditionStatus { return c.Status }, Equal(configv1.ConditionFalse)),
 				WithTransform(func(c *configv1.ClusterOperatorStatusCondition) string { return c.Reason }, Equal(clusteroperator.ReasonPlatformOperatorError)),
-				WithTransform(func(c *configv1.ClusterOperatorStatusCondition) string { return c.Message }, ContainSubstring("encountered the failing")),
+				WithTransform(func(c *configv1.ClusterOperatorStatusCondition) string { return c.Message }, ContainSubstring(util.ErrPlatformOperatorUnready.Error())),
 			))
 		})
 	})
@@ -269,7 +274,7 @@ var _ = Describe("aggregated clusteroperator controller", func() {
 				WithTransform(func(c *configv1.ClusterOperatorStatusCondition) configv1.ClusterStatusConditionType { return c.Type }, Equal(configv1.OperatorAvailable)),
 				WithTransform(func(c *configv1.ClusterOperatorStatusCondition) configv1.ConditionStatus { return c.Status }, Equal(configv1.ConditionFalse)),
 				WithTransform(func(c *configv1.ClusterOperatorStatusCondition) string { return c.Reason }, Equal(clusteroperator.ReasonPlatformOperatorError)),
-				WithTransform(func(c *configv1.ClusterOperatorStatusCondition) string { return c.Message }, ContainSubstring("encountered the failing")),
+				WithTransform(func(c *configv1.ClusterOperatorStatusCondition) string { return c.Message }, ContainSubstring(util.ErrPlatformOperatorUnready.Error())),
 			))
 		})
 	})
