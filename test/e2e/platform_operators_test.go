@@ -78,7 +78,7 @@ var _ = Describe("platform operators controller", func() {
 					Not(BeNil()),
 					WithTransform(func(c *metav1.Condition) string { return c.Type }, Equal(platformtypes.TypeApplied)),
 					WithTransform(func(c *metav1.Condition) metav1.ConditionStatus { return c.Status }, Equal(metav1.ConditionTrue)),
-					WithTransform(func(c *metav1.Condition) string { return c.Reason }, Equal(platformtypes.ReasonApplySuccessful)),
+					WithTransform(func(c *metav1.Condition) string { return c.Reason }, Equal(platformtypes.ReasonInstallSuccessful)),
 					WithTransform(func(c *metav1.Condition) string { return c.Message }, ContainSubstring("Successfully applied the desired olm.bundle content")),
 				))
 			})

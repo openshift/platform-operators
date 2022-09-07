@@ -19,8 +19,8 @@ package v1alpha1
 var (
 	TypeApplied = "Applied"
 
-	ReasonSourceFailed    = "SourceFailed"
-	ReasonApplyFailed     = "ApplyFailed"
-	ReasonApplySuccessful = "ApplySuccessful"
-	ReasonApplyPending    = "ApplyPending"
+	ReasonSourceFailed      = "SourceFailed"
+	ReasonInstallFailed     = "InstallFailed"
+	ReasonInstallSuccessful = "InstallSuccessful"
+	ReasonInstallPending    = "InstallPending"
 )
