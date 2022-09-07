@@ -132,6 +132,11 @@ test-e2e: ginkgo ## Run e2e tests
 verify: tidy manifests
 	git diff --exit-code
 
+.PHONY: vendor
+vendor: 
+	go mod tidy
+	go mod vendor
+
 ##@ Build
 
 .PHONY: build
