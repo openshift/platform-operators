@@ -31,11 +31,11 @@ var _ = Describe("platform operators controller", func() {
 			BeforeEach(func() {
 				po = &platformv1alpha1.PlatformOperator{
 					ObjectMeta: metav1.ObjectMeta{
-						GenerateName: "prometheus-operator",
+						GenerateName: "cert-manager",
 					},
 					Spec: platformv1alpha1.PlatformOperatorSpec{
 						Package: platformv1alpha1.Package{
-							Name: "prometheus-operator",
+							Name: "openshift-cert-manager-operator",
 						},
 					},
 				}
@@ -59,14 +59,14 @@ var _ = Describe("platform operators controller", func() {
 					return bi.Spec.Template.Spec.ProvisionerClassName != bi.Spec.ProvisionerClassName
 				}).Should(BeTrue())
 			})
-			It("should choose the highest olm.bundle semver available in the catalog", func() {
-				Eventually(func() bool {
+			It("should choose the correct registry+v1 bundle image", func() {
+				Eventually(func() string {
 					bi := &rukpakv1alpha1.BundleDeployment{}
 					if err := c.Get(ctx, types.NamespacedName{Name: po.GetName()}, bi); err != nil {
-						return false
+						return ""
 					}
-					return bi.Spec.Template.Spec.Source.Image.Ref == "quay.io/operatorhubio/prometheus:v0.47.0"
-				}).Should(BeTrue())
+					return bi.Spec.Template.Spec.Source.Image.Ref
+				}).Should(ContainSubstring("registry.redhat.io/cert-manager/cert-manager-operator-bundle"))
 			})
 			It("should result in a successful application", func() {
 				Eventually(func() (*metav1.Condition, error) {
