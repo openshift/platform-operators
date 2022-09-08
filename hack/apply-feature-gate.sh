@@ -47,12 +47,9 @@ spec:
 EOF
 }
 
-function waitForClusterOperatorsRollout() {
-  echo "$(date -u --rfc-3339=seconds) - Wait for the operator to go available..."
-  waitFor 10m ${KUBECTL} wait --all --for=condition=Available=True clusteroperators.config.openshift.io
-
-  echo "$(date -u --rfc-3339=seconds) - Waits for operators to finish rolling out..."
-  waitFor 30m ${KUBECTL} wait --all --for=condition=Progressing=False clusteroperators.config.openshift.io
+function waitForAggregatedPlatformOperatorCORollout() {
+  echo "$(date -u --rfc-3339=seconds) - Wait for the platform operator aggregated ClusterOperator to go available..."
+  waitFor 10m ${KUBECTL} wait --for=condition=Available=True clusteroperators.config.openshift.io/platform-operators-aggregated
 }
 
 function waitForRunningPod() {
@@ -111,4 +108,4 @@ export -f execute
 applyFeatureGate
 waitFor 30m ClusterPlatformOperatorPodsCreated
 waitForClusterPlatformOperatorPodsReadiness
-waitForClusterOperatorsRollout
+waitForAggregatedPlatformOperatorCORollout
