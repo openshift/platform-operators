@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   annotations:
     include.release.openshift.io/self-managed-high-availability: "true"
-    release.openshift.io/feature-gate: TechPreviewNoUpgrade
+    release.openshift.io/feature-set: TechPreviewNoUpgrade
   labels:
     app: core
   name: platform-operators-rukpak-core
@@ -18,7 +18,7 @@ spec:
       annotations:
         include.release.openshift.io/self-managed-high-availability: "true"
         kubectl.kubernetes.io/default-container: manager
-        release.openshift.io/feature-gate: TechPreviewNoUpgrade
+        release.openshift.io/feature-set: TechPreviewNoUpgrade
       labels:
         app: core
     spec:

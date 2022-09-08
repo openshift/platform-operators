@@ -4,7 +4,7 @@ kind: ConfigMap
 metadata:
   annotations:
     include.release.openshift.io/self-managed-high-availability: "true"
-    release.openshift.io/feature-gate: TechPreviewNoUpgrade
+    release.openshift.io/feature-set: TechPreviewNoUpgrade
     service.beta.openshift.io/inject-cabundle: "true"
   name: platform-operators-rukpak-webhook-tls
   namespace: openshift-platform-operators
