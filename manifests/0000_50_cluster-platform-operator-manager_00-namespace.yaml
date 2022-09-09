@@ -3,7 +3,7 @@ kind: Namespace
 metadata:
   annotations:
     include.release.openshift.io/self-managed-high-availability: "true"
-    release.openshift.io/feature-gate: TechPreviewNoUpgrade
+    release.openshift.io/feature-set: TechPreviewNoUpgrade
   labels:
     control-plane: controller-manager
     pod-security.kubernetes.io/enforce: baseline

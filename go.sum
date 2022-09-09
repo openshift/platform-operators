@@ -412,8 +412,8 @@ github.com/onsi/gomega v1.7.1/go.mod h1:XdKZgCCFLUoM/7CFJVPcG8C1xQ1AJ0vpAezJrB7J
 github.com/onsi/gomega v1.10.1/go.mod h1:iN09h71vgCQne3DLsj+A5owkum+a2tYe+TOCB1ybHNo=
 github.com/onsi/gomega v1.19.0 h1:4ieX6qQjPP/BfC3mpsAtIGGlxTWPeA3Inl/7DtXw1tw=
 github.com/onsi/gomega v1.19.0/go.mod h1:LY+I3pBVzYsTBU1AnDwOSxaYi9WoWiqgwooUqq9yPro=
-github.com/openshift/api v0.0.0-20220831185921-0ee1471bcabb h1:/tun/ZD0MtypwIYvZMxwupWQwVyYgQhFi1FKeZf85ms=
-github.com/openshift/api v0.0.0-20220831185921-0ee1471bcabb/go.mod h1:9JWn+H7X8wEPPc9D63krigXl8r3F1Mt6/lC98brUyhQ=
+github.com/openshift/api v0.0.0-20220908185739-e518ece6c293 h1:oqCGwpNsLTz5gXnjWK2COXkCxI5HdRwY/Aiq+P0RVdk=
+github.com/openshift/api v0.0.0-20220908185739-e518ece6c293/go.mod h1:9JWn+H7X8wEPPc9D63krigXl8r3F1Mt6/lC98brUyhQ=
 github.com/opentracing/opentracing-go v1.1.0/go.mod h1:UkNAQd3GIcIGf0SeVgPpRdFStlNbqXla1AfSYxPUl2o=
 github.com/operator-framework/api v0.15.0 h1:4f9i0drtqHj7ykLoHxv92GR43S7MmQHhmFQkfm5YaGI=
 github.com/operator-framework/api v0.15.0/go.mod h1:scnY9xqSeCsOdtJtNoHIXd7OtHZ14gj1hkDA4+DlgLY=
