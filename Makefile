@@ -66,7 +66,6 @@ RBAC_LIST = rbac.authorization.k8s.io_v1_clusterrole_platform-operators-manager-
 	rbac.authorization.k8s.io_v1_clusterrole_platform-operators-rukpak-core-admin.yaml \
 	rbac.authorization.k8s.io_v1_clusterrolebinding_platform-operators-rukpak-core-admin.yaml
 
-
 # Generate manifests e.g. CRD, RBAC etc.
 .PHONY: manifests
 manifests: generate yq kustomize
@@ -125,8 +124,9 @@ e2e: deploy test-e2e
 
 .PHONY: test-e2e
 FOCUS := $(if $(TEST),-v -focus "$(TEST)")
+JUNIT_REPORT := $(if $(ARTIFACT_DIR), -output-dir $(ARTIFACT_DIR) -junit-report junit_e2e.xml)
 test-e2e: ginkgo ## Run e2e tests
-	$(GINKGO) -trace -progress $(FOCUS) test/e2e
+	$(GINKGO) -trace -progress $(JUNIT_REPORT) $(FOCUS) test/e2e
 
 .PHONY: verify
 verify: tidy manifests
