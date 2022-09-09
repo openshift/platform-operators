@@ -35,6 +35,7 @@ import (
 
 type AggregatedClusterOperatorReconciler struct {
 	client.Client
+	ReleaseVersion string
 }
 
 const aggregateCOName = "platform-operators-aggregated"
@@ -70,6 +71,7 @@ func (a *AggregatedClusterOperatorReconciler) Reconcile(ctx context.Context, req
 	coBuilder.WithProgressing(openshiftconfigv1.ConditionTrue, "")
 	coBuilder.WithDegraded(openshiftconfigv1.ConditionFalse)
 	coBuilder.WithAvailable(openshiftconfigv1.ConditionFalse, "", "")
+	coBuilder.WithVersion("operator", a.ReleaseVersion)
 
 	poList := &platformv1alpha1.PlatformOperatorList{}
 	if err := a.List(ctx, poList); err != nil {

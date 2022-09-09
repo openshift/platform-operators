@@ -47,6 +47,9 @@ spec:
         - --leader-elect
         command:
         - /manager
+        env:
+        - name: RELEASE_VERSION
+          value: 0.0.1-snapshot
         image: controller:latest
         imagePullPolicy: IfNotPresent
         livenessProbe:
