@@ -17,7 +17,7 @@ limitations under the License.
 package v1alpha1
 
 var (
-	TypeApplied = "Applied"
+	TypeInstalled = "Installed"
 
 	ReasonSourceFailed      = "SourceFailed"
 	ReasonInstallFailed     = "InstallFailed"
