@@ -78,7 +78,7 @@ func (a *AggregatedClusterOperatorReconciler) Reconcile(ctx context.Context, req
 	if len(poList.Items) == 0 {
 		// No POs on cluster, everything is fine
 		coBuilder.WithAvailable(openshiftconfigv1.ConditionTrue, "No POs are present in the cluster", "NoPOsFound")
-		coBuilder.WithProgressing(openshiftconfigv1.ConditionTrue, "No POs are present in the cluster")
+		coBuilder.WithProgressing(openshiftconfigv1.ConditionFalse, "No POs are present in the cluster")
 		return ctrl.Result{}, nil
 	}
 
@@ -90,6 +90,7 @@ func (a *AggregatedClusterOperatorReconciler) Reconcile(ctx context.Context, req
 		return ctrl.Result{}, nil
 	}
 	coBuilder.WithAvailable(openshiftconfigv1.ConditionTrue, "All POs in a successful state", "POsHealthy")
+	coBuilder.WithProgressing(openshiftconfigv1.ConditionFalse, "All POs in a successful state")
 
 	return ctrl.Result{}, nil
 }
