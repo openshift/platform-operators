@@ -43,6 +43,20 @@ var _ = Describe("aggregated clusteroperator controller", func() {
 				WithTransform(func(c *configv1.ClusterOperatorStatusCondition) string { return c.Message }, ContainSubstring("No POs are present in the cluster")),
 			))
 		})
+		It("should consistently contain a populated status.versions", func() {
+			Consistently(func() (bool, error) {
+				co := &configv1.ClusterOperator{}
+				if err := c.Get(ctx, types.NamespacedName{Name: aggregateCOName}, co); err != nil {
+					return false, err
+				}
+				if len(co.Status.Versions) != 1 {
+					return false, nil
+				}
+				version := co.Status.Versions[0]
+
+				return version.Name != "" && version.Version != "", nil
+			}).Should(BeTrue())
+		})
 	})
 
 	When("installing a series of POs successfully", func() {
@@ -95,6 +109,21 @@ var _ = Describe("aggregated clusteroperator controller", func() {
 				WithTransform(func(c *configv1.ClusterOperatorStatusCondition) string { return c.Reason }, Equal("POsHealthy")),
 				WithTransform(func(c *configv1.ClusterOperatorStatusCondition) string { return c.Message }, ContainSubstring("All POs in a successful state")),
 			))
+		})
+
+		It("should consistently contain a populated status.versions", func() {
+			Consistently(func() (bool, error) {
+				co := &configv1.ClusterOperator{}
+				if err := c.Get(ctx, types.NamespacedName{Name: aggregateCOName}, co); err != nil {
+					return false, err
+				}
+				if len(co.Status.Versions) != 1 {
+					return false, nil
+				}
+				version := co.Status.Versions[0]
+
+				return version.Name != "" && version.Version != "", nil
+			}).Should(BeTrue())
 		})
 	})
 

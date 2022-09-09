@@ -37,6 +37,7 @@ import (
 	platformv1alpha1 "github.com/openshift/api/platform/v1alpha1"
 	"github.com/openshift/platform-operators/controllers"
 	"github.com/openshift/platform-operators/internal/applier"
+	"github.com/openshift/platform-operators/internal/clusteroperator"
 	"github.com/openshift/platform-operators/internal/sourcer"
 	//+kubebuilder:scaffold:imports
 )
@@ -98,7 +99,8 @@ func main() {
 
 	// Add Aggregated CO controller to manager
 	if err = (&controllers.AggregatedClusterOperatorReconciler{
-		Client: mgr.GetClient(),
+		Client:         mgr.GetClient(),
+		ReleaseVersion: clusteroperator.GetReleaseVariable(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AggregatedCO")
 		os.Exit(1)

@@ -42,6 +42,9 @@ spec:
           allowPrivilegeEscalation: false
           capabilities:
             drop: [ "ALL" ]
+        env:
+        - name: RELEASE_VERSION
+          value: "0.0.1-snapshot"
         livenessProbe:
           httpGet:
             path: /healthz
