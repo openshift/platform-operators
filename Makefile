@@ -129,11 +129,11 @@ test-e2e: ginkgo ## Run e2e tests
 	$(GINKGO) -trace -progress $(FOCUS) test/e2e
 
 .PHONY: verify
-verify: tidy manifests
+verify: vendor manifests
 	git diff --exit-code
 
 .PHONY: vendor
-vendor: 
+vendor:
 	go mod tidy
 	go mod vendor
 
