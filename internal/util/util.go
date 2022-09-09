@@ -98,12 +98,12 @@ func InspectPlatformOperators(POList *platformv1alpha1.PlatformOperatorList) err
 // In the case that the PO resource is expressing failing states, then an error
 // will be returned to reflect that.
 func inspectPlatformOperator(po platformv1alpha1.PlatformOperator) error {
-	applied := meta.FindStatusCondition(po.Status.Conditions, platformtypes.TypeApplied)
-	if applied == nil {
+	installed := meta.FindStatusCondition(po.Status.Conditions, platformtypes.TypeInstalled)
+	if installed == nil {
 		return buildPOFailureMessage(po.GetName(), platformtypes.ReasonInstallPending)
 	}
-	if applied.Status != metav1.ConditionTrue {
-		return buildPOFailureMessage(po.GetName(), applied.Reason)
+	if installed.Status != metav1.ConditionTrue {
+		return buildPOFailureMessage(po.GetName(), installed.Reason)
 	}
 	return nil
 }
