@@ -91,7 +91,7 @@ var _ = Describe("aggregated clusteroperator controller", func() {
 				WithTransform(func(c *metav1.Condition) string { return c.Type }, Equal(platformtypes.TypeInstalled)),
 				WithTransform(func(c *metav1.Condition) metav1.ConditionStatus { return c.Status }, Equal(metav1.ConditionTrue)),
 				WithTransform(func(c *metav1.Condition) string { return c.Reason }, Equal(platformtypes.ReasonInstallSuccessful)),
-				WithTransform(func(c *metav1.Condition) string { return c.Message }, ContainSubstring("Successfully applied the desired olm.bundle content")),
+				WithTransform(func(c *metav1.Condition) string { return c.Message }, ContainSubstring("Successfully applied")),
 			))
 		})
 
@@ -157,7 +157,7 @@ var _ = Describe("aggregated clusteroperator controller", func() {
 			}).Should(And(
 				Not(BeNil()),
 				WithTransform(func(c *metav1.Condition) string { return c.Type }, Equal(platformtypes.TypeInstalled)),
-				WithTransform(func(c *metav1.Condition) metav1.ConditionStatus { return c.Status }, Equal(metav1.ConditionUnknown)),
+				WithTransform(func(c *metav1.Condition) metav1.ConditionStatus { return c.Status }, Equal(metav1.ConditionFalse)),
 				WithTransform(func(c *metav1.Condition) string { return c.Reason }, Equal(platformtypes.ReasonSourceFailed)),
 				WithTransform(func(c *metav1.Condition) string { return c.Message }, ContainSubstring("failed to find candidate")),
 			))
@@ -224,7 +224,7 @@ var _ = Describe("aggregated clusteroperator controller", func() {
 			}).Should(And(
 				Not(BeNil()),
 				WithTransform(func(c *metav1.Condition) string { return c.Type }, Equal(platformtypes.TypeInstalled)),
-				WithTransform(func(c *metav1.Condition) metav1.ConditionStatus { return c.Status }, Equal(metav1.ConditionUnknown)),
+				WithTransform(func(c *metav1.Condition) metav1.ConditionStatus { return c.Status }, Equal(metav1.ConditionFalse)),
 				WithTransform(func(c *metav1.Condition) string { return c.Reason }, Equal(platformtypes.ReasonSourceFailed)),
 				WithTransform(func(c *metav1.Condition) string { return c.Message }, ContainSubstring("failed to find candidate")),
 			))
@@ -241,7 +241,7 @@ var _ = Describe("aggregated clusteroperator controller", func() {
 				WithTransform(func(c *metav1.Condition) string { return c.Type }, Equal(platformtypes.TypeInstalled)),
 				WithTransform(func(c *metav1.Condition) metav1.ConditionStatus { return c.Status }, Equal(metav1.ConditionTrue)),
 				WithTransform(func(c *metav1.Condition) string { return c.Reason }, Equal(platformtypes.ReasonInstallSuccessful)),
-				WithTransform(func(c *metav1.Condition) string { return c.Message }, ContainSubstring("Successfully applied the desired olm.bundle content")),
+				WithTransform(func(c *metav1.Condition) string { return c.Message }, ContainSubstring("Successfully applied")),
 			))
 		})
 

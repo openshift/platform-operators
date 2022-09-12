@@ -16,11 +16,28 @@ limitations under the License.
 
 package v1alpha1
 
+import (
+	platformv1alpha1 "github.com/openshift/api/platform/v1alpha1"
+)
+
 var (
 	TypeInstalled = "Installed"
 
-	ReasonSourceFailed      = "SourceFailed"
+	ReasonSourceFailed  = "SourceFailed"
+	ReasonUnpackPending = "UnpackPending"
+
 	ReasonInstallFailed     = "InstallFailed"
 	ReasonInstallSuccessful = "InstallSuccessful"
 	ReasonInstallPending    = "InstallPending"
 )
+
+// SetActiveBundleDeployment is responsible for populating the status.ActiveBundleDeployment
+// structure with the BundleDeployment the POM component is currently managing.
+func SetActiveBundleDeployment(po *platformv1alpha1.PlatformOperator, name string) {
+	if po == nil {
+		panic("input specified is nil")
+	}
+	po.Status.ActiveBundleDeployment = platformv1alpha1.ActiveBundleDeployment{
+		Name: name,
+	}
+}
