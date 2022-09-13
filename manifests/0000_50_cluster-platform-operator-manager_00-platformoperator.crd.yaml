@@ -5,6 +5,8 @@ metadata:
     release.openshift.io/feature-set: TechPreviewNoUpgrade
     api-approved.openshift.io: https://github.com/openshift/api/pull/1234
     include.release.openshift.io/self-managed-high-availability: "true"
+    include.release.openshift.io/single-node-developer: "true"
+    exclude.release.openshift.io/internal-openshift-hosted: "true"
   creationTimestamp: null
   name: platformoperators.platform.openshift.io
 spec:

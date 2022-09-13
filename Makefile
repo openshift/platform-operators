@@ -79,6 +79,8 @@ manifests: generate yq kustomize
 	cp $(ROOT_DIR)/vendor/github.com/openshift/api/platform/v1alpha1/platformoperators.crd.yaml manifests/0000_50_cluster-platform-operator-manager_00-platformoperator.crd.yaml
 	@# TODO(tflannag): Remove this hack when https://github.com/openshift/api/pull/1282 merges.
 	${YQ} '.metadata.annotations["include.release.openshift.io/self-managed-high-availability"] = "true"' -i manifests/0000_50_cluster-platform-operator-manager_00-platformoperator.crd.yaml
+	${YQ} '.metadata.annotations["include.release.openshift.io/single-node-developer"] = "true"' -i manifests/0000_50_cluster-platform-operator-manager_00-platformoperator.crd.yaml
+	${YQ} '.metadata.annotations["exclude.release.openshift.io/internal-openshift-hosted"] = "true"' -i manifests/0000_50_cluster-platform-operator-manager_00-platformoperator.crd.yaml
 
 	@# Move all of the rukpak manifests into the manifests folder
 	$(MV_TMP_DIR)/apiextensions.k8s.io_v1_customresourcedefinition_bundledeployments.core.rukpak.io.yaml manifests/0000_50_cluster-platform-operator-manager_00-rukpak-bundledeployments.crd.yaml
@@ -191,7 +193,7 @@ KIND ?= $(LOCALBIN)/kind
 YQ ?= $(LOCALBIN)/yq
 
 ## Tool Versions
-KUSTOMIZE_VERSION ?= v3.8.7
+KUSTOMIZE_VERSION ?= v4.2.0
 CONTROLLER_TOOLS_VERSION ?= v0.9.0
 ENVTEST_VERSION ?= latest
 GINKGO_VERSION ?= v2.1.4
