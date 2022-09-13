@@ -61,7 +61,7 @@ spec:
         - --bundle-ca-file=/etc/pki/tls/tls.crt
         command:
         - /core
-        image: quay.io/operator-framework/rukpak:main
+        image: quay.io/tflannag/rukpak:v0.11.0-tip
         imagePullPolicy: IfNotPresent
         name: manager
         ports:

@@ -22,6 +22,9 @@ images:
 - name: quay.io/brancz/kube-rbac-proxy
   newName: gcr.io/kubebuilder/kube-rbac-proxy
   newTag: v0.8.0
+- name: quay.io/operator-framework/rukpak
+  newName: quay.io/tflannag/rukpak
+  newTag: v0.11.0-tip
 
 bases:
 - ../rbac
