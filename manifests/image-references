@@ -1,0 +1,16 @@
+kind: ImageStream
+apiVersion: image.openshift.io/v1
+spec:
+  tags:
+  - name: cluster-platform-operators-manager
+    from:
+      kind: DockerImage
+      name: controller:latest
+  - name: kube-rbac-proxy
+    from:
+      kind: DockerImage
+      name: gcr.io/kubebuilder/kube-rbac-proxy:v0.8.0
+  - name: olm-rukpak
+    from:
+      kind: DockerImage
+      name: quay.io/operator-framework/rukpak:main

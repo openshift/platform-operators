@@ -14,7 +14,7 @@ RUN make build
 FROM registry.ci.openshift.org/ocp/4.12:base
 
 COPY manifests /manifests
-# LABEL io.openshift.release.operator=true
+LABEL io.openshift.release.operator=true
 
 COPY --from=builder /build/bin/manager /
 USER 1001

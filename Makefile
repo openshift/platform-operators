@@ -73,7 +73,7 @@ manifests: generate yq kustomize
 	ls $(TMP_DIR)
 
 	@# Cleanup the existing manifests so no removed ones linger post generation
-	rm manifests/* || true
+	rm manifests/*.yaml || true
 
 	@# Move the vendored PlatformOperator CRD from o/api to the manifests folder
 	cp $(ROOT_DIR)/vendor/github.com/openshift/api/platform/v1alpha1/platformoperators.crd.yaml manifests/0000_50_cluster-platform-operator-manager_00-platformoperator.crd.yaml
