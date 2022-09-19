@@ -42,6 +42,10 @@ spec:
         - containerPort: 8443
           name: https
           protocol: TCP
+        resources:
+          requests:
+            cpu: 1m
+            memory: 15Mi
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:
@@ -68,6 +72,10 @@ spec:
         name: manager
         ports:
         - containerPort: 8080
+        resources:
+          requests:
+            cpu: 15m
+            memory: 100Mi
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:
@@ -80,6 +88,7 @@ spec:
           name: upload-cache
         - mountPath: /etc/pki/tls
           name: tls
+      priorityClassName: system-cluster-critical
       securityContext:
         runAsNonRoot: true
         seccompProfile:

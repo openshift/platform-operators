@@ -20,6 +20,10 @@ spec:
         - containerPort: 8443
           protocol: TCP
           name: https
+        resources:
+          requests:
+            cpu: 1m
+            memory: 15Mi
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:

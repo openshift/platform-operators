@@ -46,6 +46,10 @@ spec:
         - containerPort: 9443
           name: webhook-server
           protocol: TCP
+        resources:
+          requests:
+            cpu: 10m
+            memory: 50Mi
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:
@@ -55,6 +59,7 @@ spec:
         - mountPath: /tmp/k8s-webhook-server/serving-certs
           name: cert
           readOnly: true
+      priorityClassName: system-cluster-critical
       securityContext:
         runAsNonRoot: true
         seccompProfile:

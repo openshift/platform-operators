@@ -17,6 +17,7 @@ spec:
         runAsNonRoot: true
         seccompProfile:
           type: RuntimeDefault
+      priorityClassName: "system-cluster-critical"
       serviceAccountName: webhooks-admin
       containers:
         - name: webhooks
@@ -32,6 +33,10 @@ spec:
             - containerPort: 9443
               name: webhook-server
               protocol: TCP
+          resources:
+            requests:
+              cpu: 10m
+              memory: 50Mi
           volumeMounts:
           - mountPath: /tmp/k8s-webhook-server/serving-certs
             name: cert

@@ -35,7 +35,8 @@ import (
 
 type AggregatedClusterOperatorReconciler struct {
 	client.Client
-	ReleaseVersion string
+	ReleaseVersion  string
+	SystemNamespace string
 }
 
 const aggregateCOName = "platform-operators-aggregated"
@@ -49,16 +50,16 @@ const aggregateCOName = "platform-operators-aggregated"
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.10.0/pkg/reconcile
-func (a *AggregatedClusterOperatorReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *AggregatedClusterOperatorReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := logr.FromContext(ctx)
 	log.Info("reconciling request", "req", req.NamespacedName)
 	defer log.Info("finished reconciling request", "req", req.NamespacedName)
 
 	coBuilder := clusteroperator.NewBuilder()
-	coWriter := clusteroperator.NewWriter(a.Client)
+	coWriter := clusteroperator.NewWriter(r.Client)
 
 	aggregatedCO := &openshiftconfigv1.ClusterOperator{}
-	if err := a.Get(ctx, req.NamespacedName, aggregatedCO); err != nil {
+	if err := r.Get(ctx, req.NamespacedName, aggregatedCO); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 	defer func() {
@@ -71,10 +72,14 @@ func (a *AggregatedClusterOperatorReconciler) Reconcile(ctx context.Context, req
 	coBuilder.WithProgressing(openshiftconfigv1.ConditionTrue, "")
 	coBuilder.WithDegraded(openshiftconfigv1.ConditionFalse)
 	coBuilder.WithAvailable(openshiftconfigv1.ConditionFalse, "", "")
-	coBuilder.WithVersion("operator", a.ReleaseVersion)
+	coBuilder.WithVersion("operator", r.ReleaseVersion)
+	coBuilder.WithRelatedObject("", "namespaces", "", r.SystemNamespace)
+	coBuilder.WithRelatedObject("platform.openshift.io", "platformoperators", "", "")
+	coBuilder.WithRelatedObject("core.rukpak.io", "bundles", "", "")
+	coBuilder.WithRelatedObject("core.rukpak.io", "bundledeployments", "", "")
 
 	poList := &platformv1alpha1.PlatformOperatorList{}
-	if err := a.List(ctx, poList); err != nil {
+	if err := r.List(ctx, poList); err != nil {
 		return ctrl.Result{}, err
 	}
 	if len(poList.Items) == 0 {
@@ -98,11 +103,11 @@ func (a *AggregatedClusterOperatorReconciler) Reconcile(ctx context.Context, req
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (a *AggregatedClusterOperatorReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *AggregatedClusterOperatorReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&openshiftconfigv1.ClusterOperator{}, builder.WithPredicates(predicate.NewPredicateFuncs(func(object client.Object) bool {
 			return object.GetName() == aggregateCOName
 		}))).
 		Watches(&source.Kind{Type: &platformv1alpha1.PlatformOperator{}}, handler.EnqueueRequestsFromMapFunc(util.RequeueClusterOperator(mgr.GetClient(), aggregateCOName))).
-		Complete(a)
+		Complete(r)
 }

@@ -21,6 +21,7 @@ spec:
         runAsNonRoot: true
         seccompProfile:
           type: RuntimeDefault
+      priorityClassName: "system-cluster-critical"
       containers:
         - name: kube-rbac-proxy
           securityContext:
@@ -41,6 +42,10 @@ spec:
             - containerPort: 8443
               protocol: TCP
               name: https
+          resources:
+            requests:
+              cpu: 1m
+              memory: 15Mi
           volumeMounts:
             - name: tls
               mountPath: /etc/pki/tls
@@ -65,6 +70,10 @@ spec:
             - "--bundle-ca-file=/etc/pki/tls/tls.crt"
           ports:
             - containerPort: 8080
+          resources:
+            requests:
+              cpu: 15m
+              memory: 100Mi
           volumeMounts:
             - name: bundle-cache
               mountPath: /var/cache/bundles
