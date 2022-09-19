@@ -38,6 +38,10 @@ spec:
         - containerPort: 8443
           name: https
           protocol: TCP
+        resources:
+          requests:
+            cpu: 1m
+            memory: 15Mi
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:
@@ -68,9 +72,6 @@ spec:
           initialDelaySeconds: 5
           periodSeconds: 10
         resources:
-          limits:
-            cpu: 500m
-            memory: 128Mi
           requests:
             cpu: 10m
             memory: 64Mi
@@ -79,6 +80,7 @@ spec:
           capabilities:
             drop:
             - ALL
+      priorityClassName: system-cluster-critical
       securityContext:
         runAsNonRoot: true
         seccompProfile:
