@@ -1,2 +1,3 @@
 resources:
 - aggregated_clusteroperator.yaml
+- core_clusteroperator.yaml
