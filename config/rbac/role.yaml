@@ -10,6 +10,7 @@ rules:
   resources:
   - clusteroperators
   verbs:
+  - create
   - get
   - list
   - watch

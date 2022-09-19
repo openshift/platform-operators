@@ -18,29 +18,29 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 
 	configv1 "github.com/openshift/api/config/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/handler"
 	logr "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	platformv1alpha1 "github.com/openshift/api/platform/v1alpha1"
 	"github.com/openshift/platform-operators/internal/clusteroperator"
-	"github.com/openshift/platform-operators/internal/util"
 )
 
-type AggregatedClusterOperatorReconciler struct {
+type CoreClusterOperatorReconciler struct {
 	client.Client
 	ReleaseVersion  string
 	SystemNamespace string
 }
 
 //+kubebuilder:rbac:groups=platform.openshift.io,resources=platformoperators,verbs=list
-//+kubebuilder:rbac:groups=config.openshift.io,resources=clusteroperators,verbs=get;list;watch
+//+kubebuilder:rbac:groups=config.openshift.io,resources=clusteroperators,verbs=get;list;watch;create
 //+kubebuilder:rbac:groups=config.openshift.io,resources=clusteroperators/status,verbs=update;patch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
@@ -48,7 +48,7 @@ type AggregatedClusterOperatorReconciler struct {
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.10.0/pkg/reconcile
-func (r *AggregatedClusterOperatorReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *CoreClusterOperatorReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := logr.FromContext(ctx)
 	log.Info("reconciling request", "req", req.NamespacedName)
 	defer log.Info("finished reconciling request", "req", req.NamespacedName)
@@ -56,13 +56,23 @@ func (r *AggregatedClusterOperatorReconciler) Reconcile(ctx context.Context, req
 	coBuilder := clusteroperator.NewBuilder()
 	coWriter := clusteroperator.NewWriter(r.Client)
 
-	aggregatedCO := &configv1.ClusterOperator{}
-	if err := r.Get(ctx, req.NamespacedName, aggregatedCO); err != nil {
-		// TODO: recreate this resource when it's been deleted.
-		return ctrl.Result{}, client.IgnoreNotFound(err)
+	core := &configv1.ClusterOperator{}
+	if err := r.Get(ctx, req.NamespacedName, core); err != nil {
+		if !apierrors.IsNotFound(err) {
+			return ctrl.Result{}, err
+		}
+
+		log.Info("core clusteroperator does not exist. recreating it...", "name", clusteroperator.CoreResourceName)
+		core = &configv1.ClusterOperator{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: clusteroperator.CoreResourceName,
+			},
+			Status: configv1.ClusterOperatorStatus{},
+		}
+		return ctrl.Result{}, r.Create(ctx, core)
 	}
 	defer func() {
-		if err := coWriter.UpdateStatus(ctx, aggregatedCO, coBuilder.GetStatus()); err != nil {
+		if err := coWriter.UpdateStatus(ctx, core, coBuilder.GetStatus()); err != nil {
 			log.Error(err, "error updating CO status")
 		}
 	}()
@@ -72,39 +82,32 @@ func (r *AggregatedClusterOperatorReconciler) Reconcile(ctx context.Context, req
 	coBuilder.WithDegraded(configv1.ConditionFalse)
 	coBuilder.WithAvailable(configv1.ConditionFalse, "", "")
 	coBuilder.WithVersion("operator", r.ReleaseVersion)
-	coBuilder.WithRelatedObject("", "namespaces", "", r.SystemNamespace)
-	coBuilder.WithRelatedObject("platform.openshift.io", "platformoperators", "", "")
+
+	ensureRelatedObjects(coBuilder, r.SystemNamespace)
 
 	poList := &platformv1alpha1.PlatformOperatorList{}
 	if err := r.List(ctx, poList); err != nil {
 		return ctrl.Result{}, err
 	}
-	if len(poList.Items) == 0 {
-		// No POs on cluster, everything is fine
-		coBuilder.WithAvailable(configv1.ConditionTrue, "No POs are present in the cluster", "NoPOsFound")
-		coBuilder.WithProgressing(configv1.ConditionFalse, "No POs are present in the cluster")
-		return ctrl.Result{}, nil
-	}
 
-	// check whether any of the underlying PO resources are reporting
-	// any failing status states, and update the aggregate CO resource
-	// to reflect those failing PO resources.
-	if statusErrorCheck := util.InspectPlatformOperators(poList); statusErrorCheck != nil {
-		coBuilder.WithAvailable(configv1.ConditionFalse, statusErrorCheck.Error(), "POError")
-		return ctrl.Result{}, nil
-	}
-	coBuilder.WithAvailable(configv1.ConditionTrue, "All POs in a successful state", "POsHealthy")
-	coBuilder.WithProgressing(configv1.ConditionFalse, "All POs in a successful state")
+	coBuilder.WithAvailable(configv1.ConditionTrue, fmt.Sprintf("The platform operator manager is available at %s", r.ReleaseVersion), clusteroperator.ReasonAsExpected)
+	coBuilder.WithProgressing(configv1.ConditionFalse, "")
 
 	return ctrl.Result{}, nil
 }
 
+func ensureRelatedObjects(builder *clusteroperator.Builder, namespace string) {
+	builder.WithRelatedObject("", "namespaces", "", namespace)
+	builder.WithRelatedObject("platform.openshift.io", "platformoperators", "", "")
+	builder.WithRelatedObject("core.rukpak.io", "bundles", "", "")
+	builder.WithRelatedObject("core.rukpak.io", "bundledeployments", "", "")
+}
+
 // SetupWithManager sets up the controller with the Manager.
-func (r *AggregatedClusterOperatorReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *CoreClusterOperatorReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&configv1.ClusterOperator{}, builder.WithPredicates(predicate.NewPredicateFuncs(func(object client.Object) bool {
-			return object.GetName() == clusteroperator.AggregateResourceName
+			return object.GetName() == clusteroperator.CoreResourceName
 		}))).
-		Watches(&source.Kind{Type: &platformv1alpha1.PlatformOperator{}}, handler.EnqueueRequestsFromMapFunc(util.RequeueClusterOperator(mgr.GetClient(), clusteroperator.AggregateResourceName))).
 		Complete(r)
 }

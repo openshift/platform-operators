@@ -99,13 +99,21 @@ func main() {
 	}
 	//+kubebuilder:scaffold:builder
 
-	// Add Aggregated CO controller to manager
+	// Add the core and aggregate ClusterOperator controllers to the manager.
 	if err = (&controllers.AggregatedClusterOperatorReconciler{
 		Client:          mgr.GetClient(),
 		ReleaseVersion:  clusteroperator.GetReleaseVariable(),
 		SystemNamespace: util.PodNamespace(systemNamespace),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "AggregatedCO")
+		setupLog.Error(err, "unable to create controller", "controller", "AggregatedClusterOperator")
+		os.Exit(1)
+	}
+	if err = (&controllers.CoreClusterOperatorReconciler{
+		Client:          mgr.GetClient(),
+		ReleaseVersion:  clusteroperator.GetReleaseVariable(),
+		SystemNamespace: util.PodNamespace(systemNamespace),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "CoreClusterOperator")
 		os.Exit(1)
 	}
 

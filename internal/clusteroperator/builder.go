@@ -8,6 +8,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+const (
+	ReasonAsExpected = "AsExpected"
+)
+
 // From https://github.com/operator-framework/operator-lifecycle-manager/pkg/lib/operatorstatus/builder.go
 // Note: the clock api-machinery library in that package is now deprecated, so it has been removed here.
 
