@@ -38,6 +38,7 @@ import (
 	"github.com/openshift/platform-operators/controllers"
 	"github.com/openshift/platform-operators/internal/clusteroperator"
 	"github.com/openshift/platform-operators/internal/sourcer"
+	"github.com/openshift/platform-operators/internal/util"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -56,14 +57,18 @@ func init() {
 }
 
 func main() {
-	var metricsAddr string
-	var enableLeaderElection bool
-	var probeAddr string
+	var (
+		metricsAddr          string
+		enableLeaderElection bool
+		probeAddr            string
+		systemNamespace      string
+	)
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
 	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
 		"Enable leader election for controller manager. "+
 			"Enabling this will ensure there is only one active controller manager.")
+	flag.StringVar(&systemNamespace, "system-namespace", "openshift-platform-operators", "Configures the namespace that gets used to deploy system resources.")
 	opts := zap.Options{
 		Development: true,
 	}
@@ -96,8 +101,9 @@ func main() {
 
 	// Add Aggregated CO controller to manager
 	if err = (&controllers.AggregatedClusterOperatorReconciler{
-		Client:         mgr.GetClient(),
-		ReleaseVersion: clusteroperator.GetReleaseVariable(),
+		Client:          mgr.GetClient(),
+		ReleaseVersion:  clusteroperator.GetReleaseVariable(),
+		SystemNamespace: util.PodNamespace(systemNamespace),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AggregatedCO")
 		os.Exit(1)

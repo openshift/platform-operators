@@ -3,6 +3,7 @@ package util
 import (
 	"context"
 	"fmt"
+	"os"
 
 	configv1 "github.com/openshift/api/config/v1"
 	rukpakv1alpha1 "github.com/operator-framework/rukpak/api/v1alpha1"
@@ -17,6 +18,18 @@ import (
 	platformv1alpha1 "github.com/openshift/api/platform/v1alpha1"
 	platformtypes "github.com/openshift/platform-operators/api/v1alpha1"
 )
+
+// GetPodNamespace checks whether the controller is running in a Pod vs.
+// being run locally by inspecting the namespace file that gets mounted
+// automatically for Pods at runtime. If that file doesn't exist, then
+// return the value of the defaultNamespace parameter.
+func PodNamespace(defaultNamespace string) string {
+	namespace, err := os.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/namespace")
+	if err != nil {
+		return defaultNamespace
+	}
+	return string(namespace)
+}
 
 func RequeuePlatformOperators(cl client.Client) handler.MapFunc {
 	return func(object client.Object) []reconcile.Request {
