@@ -23,6 +23,8 @@ import (
 var (
 	TypeInstalled = "Installed"
 
+	ReasonValidationFailed = "ValidationFailed"
+
 	ReasonSourceFailed  = "SourceFailed"
 	ReasonUnpackPending = "UnpackPending"
 

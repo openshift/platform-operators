@@ -38,6 +38,7 @@ import (
 	"github.com/openshift/platform-operators/internal/applier"
 	"github.com/openshift/platform-operators/internal/sourcer"
 	"github.com/openshift/platform-operators/internal/util"
+	"github.com/openshift/platform-operators/internal/validate"
 )
 
 var (
@@ -78,6 +79,16 @@ func (r *PlatformOperatorReconciler) Reconcile(ctx context.Context, req ctrl.Req
 			log.Error(err, "failed to patch status")
 		}
 	}()
+
+	if err := validate.UniquePackage(ctx, r.Client, po); err != nil {
+		meta.SetStatusCondition(&po.Status.Conditions, metav1.Condition{
+			Type:    platformtypes.TypeInstalled,
+			Status:  metav1.ConditionFalse,
+			Reason:  platformtypes.ReasonValidationFailed,
+			Message: err.Error(),
+		})
+		return ctrl.Result{}, err
+	}
 
 	bd, err := r.ensureDesiredBundleDeployment(ctx, po)
 	if err != nil {
