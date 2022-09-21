@@ -203,4 +203,55 @@ var _ = Describe("platform operators controller", func() {
 			))
 		})
 	})
+
+	When("an invalid PO that references a package that another PO defines is created", func() {
+		var (
+			po          *platformv1alpha1.PlatformOperator
+			duplicatePO *platformv1alpha1.PlatformOperator
+		)
+		BeforeEach(func() {
+			po = &platformv1alpha1.PlatformOperator{
+				ObjectMeta: metav1.ObjectMeta{
+					GenerateName: "cert-manager",
+				},
+				Spec: platformv1alpha1.PlatformOperatorSpec{
+					Package: platformv1alpha1.Package{
+						Name: "openshift-cert-manager-operator",
+					},
+				},
+			}
+			Expect(c.Create(ctx, po)).To(BeNil())
+
+			duplicatePO = &platformv1alpha1.PlatformOperator{
+				ObjectMeta: metav1.ObjectMeta{
+					GenerateName: "cert-manager",
+				},
+				Spec: platformv1alpha1.PlatformOperatorSpec{
+					Package: platformv1alpha1.Package{
+						Name: "openshift-cert-manager-operator",
+					},
+				},
+			}
+			Expect(c.Create(ctx, duplicatePO)).To(BeNil())
+		})
+		AfterEach(func() {
+			Expect(c.Delete(ctx, po)).To(BeNil())
+			Expect(c.Delete(ctx, duplicatePO)).To(BeNil())
+		})
+
+		It("should eventually result in a failed installation with a ValidationFailed reason", func() {
+			Eventually(func() (*metav1.Condition, error) {
+				if err := c.Get(ctx, client.ObjectKeyFromObject(duplicatePO), duplicatePO); err != nil {
+					return nil, err
+				}
+				return meta.FindStatusCondition(duplicatePO.Status.Conditions, platformtypes.TypeInstalled), nil
+			}).Should(And(
+				Not(BeNil()),
+				WithTransform(func(c *metav1.Condition) string { return c.Type }, Equal(platformtypes.TypeInstalled)),
+				WithTransform(func(c *metav1.Condition) metav1.ConditionStatus { return c.Status }, Equal(metav1.ConditionFalse)),
+				WithTransform(func(c *metav1.Condition) string { return c.Reason }, Equal(platformtypes.ReasonValidationFailed)),
+				WithTransform(func(c *metav1.Condition) string { return c.Message }, ContainSubstring("spec.package.name is not unique")),
+			))
+		})
+	})
 })
