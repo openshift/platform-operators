@@ -19,7 +19,7 @@ package controllers
 import (
 	"context"
 
-	openshiftconfigv1 "github.com/openshift/api/config/v1"
+	configv1 "github.com/openshift/api/config/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -58,7 +58,7 @@ func (r *AggregatedClusterOperatorReconciler) Reconcile(ctx context.Context, req
 	coBuilder := clusteroperator.NewBuilder()
 	coWriter := clusteroperator.NewWriter(r.Client)
 
-	aggregatedCO := &openshiftconfigv1.ClusterOperator{}
+	aggregatedCO := &configv1.ClusterOperator{}
 	if err := r.Get(ctx, req.NamespacedName, aggregatedCO); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
@@ -69,9 +69,9 @@ func (r *AggregatedClusterOperatorReconciler) Reconcile(ctx context.Context, req
 	}()
 
 	// Set the default CO status conditions: Progressing=True, Degraded=False, Available=False
-	coBuilder.WithProgressing(openshiftconfigv1.ConditionTrue, "")
-	coBuilder.WithDegraded(openshiftconfigv1.ConditionFalse)
-	coBuilder.WithAvailable(openshiftconfigv1.ConditionFalse, "", "")
+	coBuilder.WithProgressing(configv1.ConditionTrue, "")
+	coBuilder.WithDegraded(configv1.ConditionFalse)
+	coBuilder.WithAvailable(configv1.ConditionFalse, "", "")
 	coBuilder.WithVersion("operator", r.ReleaseVersion)
 	coBuilder.WithRelatedObject("", "namespaces", "", r.SystemNamespace)
 	coBuilder.WithRelatedObject("platform.openshift.io", "platformoperators", "", "")
@@ -84,8 +84,8 @@ func (r *AggregatedClusterOperatorReconciler) Reconcile(ctx context.Context, req
 	}
 	if len(poList.Items) == 0 {
 		// No POs on cluster, everything is fine
-		coBuilder.WithAvailable(openshiftconfigv1.ConditionTrue, "No POs are present in the cluster", "NoPOsFound")
-		coBuilder.WithProgressing(openshiftconfigv1.ConditionFalse, "No POs are present in the cluster")
+		coBuilder.WithAvailable(configv1.ConditionTrue, "No POs are present in the cluster", "NoPOsFound")
+		coBuilder.WithProgressing(configv1.ConditionFalse, "No POs are present in the cluster")
 		return ctrl.Result{}, nil
 	}
 
@@ -93,11 +93,11 @@ func (r *AggregatedClusterOperatorReconciler) Reconcile(ctx context.Context, req
 	// any failing status states, and update the aggregate CO resource
 	// to reflect those failing PO resources.
 	if statusErrorCheck := util.InspectPlatformOperators(poList); statusErrorCheck != nil {
-		coBuilder.WithAvailable(openshiftconfigv1.ConditionFalse, statusErrorCheck.Error(), "POError")
+		coBuilder.WithAvailable(configv1.ConditionFalse, statusErrorCheck.Error(), "POError")
 		return ctrl.Result{}, nil
 	}
-	coBuilder.WithAvailable(openshiftconfigv1.ConditionTrue, "All POs in a successful state", "POsHealthy")
-	coBuilder.WithProgressing(openshiftconfigv1.ConditionFalse, "All POs in a successful state")
+	coBuilder.WithAvailable(configv1.ConditionTrue, "All POs in a successful state", "POsHealthy")
+	coBuilder.WithProgressing(configv1.ConditionFalse, "All POs in a successful state")
 
 	return ctrl.Result{}, nil
 }
@@ -105,7 +105,7 @@ func (r *AggregatedClusterOperatorReconciler) Reconcile(ctx context.Context, req
 // SetupWithManager sets up the controller with the Manager.
 func (r *AggregatedClusterOperatorReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&openshiftconfigv1.ClusterOperator{}, builder.WithPredicates(predicate.NewPredicateFuncs(func(object client.Object) bool {
+		For(&configv1.ClusterOperator{}, builder.WithPredicates(predicate.NewPredicateFuncs(func(object client.Object) bool {
 			return object.GetName() == aggregateCOName
 		}))).
 		Watches(&source.Kind{Type: &platformv1alpha1.PlatformOperator{}}, handler.EnqueueRequestsFromMapFunc(util.RequeueClusterOperator(mgr.GetClient(), aggregateCOName))).

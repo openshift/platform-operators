@@ -30,6 +30,8 @@ linters-settings:
       alias: metav1
     - pkg: k8s.io/apimachinery/pkg/api/errors
       alias: apierrors
+    - pkg: github.com/openshift/api/config/v1
+      alias: configv1
     - pkg: github.com/operator-framework/api/pkg/operators/v1alpha1
       alias: operatorsv1alpha1
     - pkg: github.com/openshift/api/platform/v1alpha1
