@@ -77,10 +77,6 @@ manifests: generate yq kustomize
 
 	@# Move the vendored PlatformOperator CRD from o/api to the manifests folder
 	cp $(ROOT_DIR)/vendor/github.com/openshift/api/platform/v1alpha1/platformoperators.crd.yaml manifests/0000_50_cluster-platform-operator-manager_00-platformoperator.crd.yaml
-	@# TODO(tflannag): Remove this hack when https://github.com/openshift/api/pull/1282 merges.
-	${YQ} '.metadata.annotations["include.release.openshift.io/self-managed-high-availability"] = "true"' -i manifests/0000_50_cluster-platform-operator-manager_00-platformoperator.crd.yaml
-	${YQ} '.metadata.annotations["include.release.openshift.io/single-node-developer"] = "true"' -i manifests/0000_50_cluster-platform-operator-manager_00-platformoperator.crd.yaml
-	${YQ} '.metadata.annotations["exclude.release.openshift.io/internal-openshift-hosted"] = "true"' -i manifests/0000_50_cluster-platform-operator-manager_00-platformoperator.crd.yaml
 
 	@# Move all of the rukpak manifests into the manifests folder
 	$(MV_TMP_DIR)/apiextensions.k8s.io_v1_customresourcedefinition_bundledeployments.core.rukpak.io.yaml manifests/0000_50_cluster-platform-operator-manager_00-rukpak-bundledeployments.crd.yaml
