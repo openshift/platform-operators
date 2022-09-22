@@ -56,7 +56,7 @@ spec:
         env:
         - name: RELEASE_VERSION
           value: 0.0.1-snapshot
-        image: controller:latest
+        image: quay.io/openshift/origin-cluster-platform-operators-manager:4.12
         imagePullPolicy: IfNotPresent
         livenessProbe:
           httpGet:

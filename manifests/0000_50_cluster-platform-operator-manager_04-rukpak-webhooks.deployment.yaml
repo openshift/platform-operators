@@ -38,7 +38,7 @@ spec:
       containers:
       - command:
         - /webhooks
-        image: quay.io/operator-framework/rukpak:main
+        image: quay.io/openshift/origin-olm-rukpak:4.12
         imagePullPolicy: IfNotPresent
         name: webhooks
         ports:
