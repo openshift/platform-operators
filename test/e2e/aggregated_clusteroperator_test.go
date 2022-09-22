@@ -25,6 +25,9 @@ var _ = Describe("aggregated clusteroperator controller", func() {
 	})
 
 	When("no POs have been installed on the cluster", func() {
+		AfterEach(func() {
+			Expect(HandleTestCaseFailure()).To(BeNil())
+		})
 		It("should consistently report a healthy CO status back to the CVO", func() {
 			Consistently(func() (*configv1.ClusterOperatorStatusCondition, error) {
 				co := &configv1.ClusterOperator{}
@@ -83,6 +86,7 @@ var _ = Describe("aggregated clusteroperator controller", func() {
 			Expect(c.Create(ctx, po)).To(BeNil())
 		})
 		AfterEach(func() {
+			Expect(HandleTestCaseFailure()).To(BeNil())
 			Expect(c.Delete(ctx, po)).To(BeNil())
 		})
 
@@ -151,6 +155,7 @@ var _ = Describe("aggregated clusteroperator controller", func() {
 			Expect(c.Create(ctx, po)).To(BeNil())
 		})
 		AfterEach(func() {
+			Expect(HandleTestCaseFailure()).To(BeNil())
 			Expect(c.Delete(ctx, po)).To(BeNil())
 		})
 
@@ -217,6 +222,7 @@ var _ = Describe("aggregated clusteroperator controller", func() {
 			Expect(c.Create(ctx, valid)).To(BeNil())
 		})
 		AfterEach(func() {
+			Expect(HandleTestCaseFailure()).To(BeNil())
 			Expect(c.Delete(ctx, invalid)).To(BeNil())
 			Expect(c.Delete(ctx, valid)).To(BeNil())
 		})

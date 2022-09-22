@@ -13,3 +13,5 @@
 
 # Dependency directories (remove the comment below to include it)
 bin
+# Ignore .kube cache produced when running the bash script responsible for collecting testing artifacts
+test/e2e/.kube
