@@ -13,4 +13,4 @@ spec:
   - name: olm-rukpak
     from:
       kind: DockerImage
-      name: quay.io/operator-framework/rukpak:main
+      name: quay.io/openshift/origin-olm-rukpak:4.12
