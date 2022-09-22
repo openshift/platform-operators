@@ -5,7 +5,7 @@ spec:
   - name: cluster-platform-operators-manager
     from:
       kind: DockerImage
-      name: controller:latest
+      name: quay.io/openshift/origin-cluster-platform-operators-manager:4.12
   - name: kube-rbac-proxy
     from:
       kind: DockerImage
