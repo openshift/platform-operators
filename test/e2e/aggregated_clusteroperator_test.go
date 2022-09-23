@@ -13,10 +13,7 @@ import (
 
 	platformv1alpha1 "github.com/openshift/api/platform/v1alpha1"
 	platformtypes "github.com/openshift/platform-operators/api/v1alpha1"
-)
-
-const (
-	aggregateCOName = "platform-operators-aggregated"
+	"github.com/openshift/platform-operators/internal/clusteroperator"
 )
 
 var _ = Describe("aggregated clusteroperator controller", func() {
@@ -31,7 +28,7 @@ var _ = Describe("aggregated clusteroperator controller", func() {
 		It("should consistently report a healthy CO status back to the CVO", func() {
 			Consistently(func() (*configv1.ClusterOperatorStatusCondition, error) {
 				co := &configv1.ClusterOperator{}
-				if err := c.Get(ctx, types.NamespacedName{Name: aggregateCOName}, co); err != nil {
+				if err := c.Get(ctx, types.NamespacedName{Name: clusteroperator.AggregateResourceName}, co); err != nil {
 					return nil, err
 				}
 				return FindStatusCondition(co.Status.Conditions, configv1.OperatorAvailable), nil
@@ -46,7 +43,7 @@ var _ = Describe("aggregated clusteroperator controller", func() {
 		It("should consistently contain a populated status.versions array", func() {
 			Consistently(func() (bool, error) {
 				co := &configv1.ClusterOperator{}
-				if err := c.Get(ctx, types.NamespacedName{Name: aggregateCOName}, co); err != nil {
+				if err := c.Get(ctx, types.NamespacedName{Name: clusteroperator.AggregateResourceName}, co); err != nil {
 					return false, err
 				}
 				if len(co.Status.Versions) != 1 {
@@ -60,7 +57,7 @@ var _ = Describe("aggregated clusteroperator controller", func() {
 		It("should consistently contain a populated status.relatedObjects array", func() {
 			Consistently(func() (bool, error) {
 				co := &configv1.ClusterOperator{}
-				if err := c.Get(ctx, types.NamespacedName{Name: aggregateCOName}, co); err != nil {
+				if err := c.Get(ctx, types.NamespacedName{Name: clusteroperator.AggregateResourceName}, co); err != nil {
 					return false, err
 				}
 				return len(co.Status.RelatedObjects) == 4, nil
@@ -107,7 +104,7 @@ var _ = Describe("aggregated clusteroperator controller", func() {
 		It("should eventually report a healthy CO status back to the CVO", func() {
 			Eventually(func() (*configv1.ClusterOperatorStatusCondition, error) {
 				co := &configv1.ClusterOperator{}
-				if err := c.Get(ctx, types.NamespacedName{Name: aggregateCOName}, co); err != nil {
+				if err := c.Get(ctx, types.NamespacedName{Name: clusteroperator.AggregateResourceName}, co); err != nil {
 					return nil, err
 				}
 				return FindStatusCondition(co.Status.Conditions, configv1.OperatorAvailable), nil
@@ -123,7 +120,7 @@ var _ = Describe("aggregated clusteroperator controller", func() {
 		It("should consistently contain a populated status.versions", func() {
 			Consistently(func() (bool, error) {
 				co := &configv1.ClusterOperator{}
-				if err := c.Get(ctx, types.NamespacedName{Name: aggregateCOName}, co); err != nil {
+				if err := c.Get(ctx, types.NamespacedName{Name: clusteroperator.AggregateResourceName}, co); err != nil {
 					return false, err
 				}
 				if len(co.Status.Versions) != 1 {
@@ -175,7 +172,7 @@ var _ = Describe("aggregated clusteroperator controller", func() {
 		It("should eventually report an unvailable CO status back to the CVO", func() {
 			Eventually(func() (*configv1.ClusterOperatorStatusCondition, error) {
 				co := &configv1.ClusterOperator{}
-				if err := c.Get(ctx, types.NamespacedName{Name: aggregateCOName}, co); err != nil {
+				if err := c.Get(ctx, types.NamespacedName{Name: clusteroperator.AggregateResourceName}, co); err != nil {
 					return nil, err
 				}
 				return FindStatusCondition(co.Status.Conditions, configv1.OperatorAvailable), nil
@@ -257,7 +254,7 @@ var _ = Describe("aggregated clusteroperator controller", func() {
 		It("should eventually report an unvailable CO status back to the CVO", func() {
 			Eventually(func() (*configv1.ClusterOperatorStatusCondition, error) {
 				co := &configv1.ClusterOperator{}
-				if err := c.Get(ctx, types.NamespacedName{Name: aggregateCOName}, co); err != nil {
+				if err := c.Get(ctx, types.NamespacedName{Name: clusteroperator.AggregateResourceName}, co); err != nil {
 					return nil, err
 				}
 				return FindStatusCondition(co.Status.Conditions, configv1.OperatorAvailable), nil

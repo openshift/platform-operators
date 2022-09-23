@@ -39,8 +39,6 @@ type AggregatedClusterOperatorReconciler struct {
 	SystemNamespace string
 }
 
-const aggregateCOName = "platform-operators-aggregated"
-
 //+kubebuilder:rbac:groups=platform.openshift.io,resources=platformoperators,verbs=list
 //+kubebuilder:rbac:groups=config.openshift.io,resources=clusteroperators,verbs=get;list;watch
 //+kubebuilder:rbac:groups=config.openshift.io,resources=clusteroperators/status,verbs=update;patch
@@ -106,8 +104,8 @@ func (r *AggregatedClusterOperatorReconciler) Reconcile(ctx context.Context, req
 func (r *AggregatedClusterOperatorReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&configv1.ClusterOperator{}, builder.WithPredicates(predicate.NewPredicateFuncs(func(object client.Object) bool {
-			return object.GetName() == aggregateCOName
+			return object.GetName() == clusteroperator.AggregateResourceName
 		}))).
-		Watches(&source.Kind{Type: &platformv1alpha1.PlatformOperator{}}, handler.EnqueueRequestsFromMapFunc(util.RequeueClusterOperator(mgr.GetClient(), aggregateCOName))).
+		Watches(&source.Kind{Type: &platformv1alpha1.PlatformOperator{}}, handler.EnqueueRequestsFromMapFunc(util.RequeueClusterOperator(mgr.GetClient(), clusteroperator.AggregateResourceName))).
 		Complete(r)
 }
