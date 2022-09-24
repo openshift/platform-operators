@@ -6,7 +6,7 @@ set -o errexit
 
 : "${KUBECONFIG:?}"
 : "${ARTIFACT_DIR:?}"
-: "${KUBECTL:=kubectl}"
+: "${KUBECTL:=/cli/oc}"
 
 echo "Using the ${KUBECTL} kubectl binary"
 echo "Using the ${ARTIFACT_DIR} output directory"
