@@ -36,8 +36,8 @@ var _ = Describe("aggregated clusteroperator controller", func() {
 				Not(BeNil()),
 				WithTransform(func(c *configv1.ClusterOperatorStatusCondition) configv1.ClusterStatusConditionType { return c.Type }, Equal(configv1.OperatorAvailable)),
 				WithTransform(func(c *configv1.ClusterOperatorStatusCondition) configv1.ConditionStatus { return c.Status }, Equal(configv1.ConditionTrue)),
-				WithTransform(func(c *configv1.ClusterOperatorStatusCondition) string { return c.Reason }, Equal("NoPOsFound")),
-				WithTransform(func(c *configv1.ClusterOperatorStatusCondition) string { return c.Message }, ContainSubstring("No POs are present in the cluster")),
+				WithTransform(func(c *configv1.ClusterOperatorStatusCondition) string { return c.Reason }, Equal(clusteroperator.ReasonAsExpected)),
+				WithTransform(func(c *configv1.ClusterOperatorStatusCondition) string { return c.Message }, ContainSubstring("No platform operators are present in the cluster")),
 			))
 		})
 		It("should consistently contain a populated status.versions array", func() {
@@ -112,8 +112,8 @@ var _ = Describe("aggregated clusteroperator controller", func() {
 				Not(BeNil()),
 				WithTransform(func(c *configv1.ClusterOperatorStatusCondition) configv1.ClusterStatusConditionType { return c.Type }, Equal(configv1.OperatorAvailable)),
 				WithTransform(func(c *configv1.ClusterOperatorStatusCondition) configv1.ConditionStatus { return c.Status }, Equal(configv1.ConditionTrue)),
-				WithTransform(func(c *configv1.ClusterOperatorStatusCondition) string { return c.Reason }, Equal("POsHealthy")),
-				WithTransform(func(c *configv1.ClusterOperatorStatusCondition) string { return c.Message }, ContainSubstring("All POs in a successful state")),
+				WithTransform(func(c *configv1.ClusterOperatorStatusCondition) string { return c.Reason }, Equal(clusteroperator.ReasonAsExpected)),
+				WithTransform(func(c *configv1.ClusterOperatorStatusCondition) string { return c.Message }, ContainSubstring("All platform operators are in a successful state")),
 			))
 		})
 
@@ -180,7 +180,7 @@ var _ = Describe("aggregated clusteroperator controller", func() {
 				Not(BeNil()),
 				WithTransform(func(c *configv1.ClusterOperatorStatusCondition) configv1.ClusterStatusConditionType { return c.Type }, Equal(configv1.OperatorAvailable)),
 				WithTransform(func(c *configv1.ClusterOperatorStatusCondition) configv1.ConditionStatus { return c.Status }, Equal(configv1.ConditionFalse)),
-				WithTransform(func(c *configv1.ClusterOperatorStatusCondition) string { return c.Reason }, Equal("POError")),
+				WithTransform(func(c *configv1.ClusterOperatorStatusCondition) string { return c.Reason }, Equal(clusteroperator.ReasonPlatformOperatorError)),
 				WithTransform(func(c *configv1.ClusterOperatorStatusCondition) string { return c.Message }, ContainSubstring("encountered the failing")),
 			))
 		})
@@ -262,7 +262,7 @@ var _ = Describe("aggregated clusteroperator controller", func() {
 				Not(BeNil()),
 				WithTransform(func(c *configv1.ClusterOperatorStatusCondition) configv1.ClusterStatusConditionType { return c.Type }, Equal(configv1.OperatorAvailable)),
 				WithTransform(func(c *configv1.ClusterOperatorStatusCondition) configv1.ConditionStatus { return c.Status }, Equal(configv1.ConditionFalse)),
-				WithTransform(func(c *configv1.ClusterOperatorStatusCondition) string { return c.Reason }, Equal("POError")),
+				WithTransform(func(c *configv1.ClusterOperatorStatusCondition) string { return c.Reason }, Equal(clusteroperator.ReasonPlatformOperatorError)),
 				WithTransform(func(c *configv1.ClusterOperatorStatusCondition) string { return c.Message }, ContainSubstring("encountered the failing")),
 			))
 		})

@@ -74,16 +74,9 @@ func (r *AggregatedClusterOperatorReconciler) Reconcile(ctx context.Context, req
 	coBuilder.WithDegraded(metav1.ConditionFalse, "", "")
 	coBuilder.WithAvailable(metav1.ConditionFalse, "", "")
 	coBuilder.WithVersion("operator", r.ReleaseVersion)
-	coBuilder.WithRelatedObject(configv1.ObjectReference{Group: "", Resource: "namespaces", Name: r.SystemNamespace})
 
-	// NOTE: Group and resource can be referenced without name/namespace set, which is a signal
-	// that _ALL_ objects of that group/resource are related objects. This is useful for
-	// must-gather automation.
-	coBuilder.WithRelatedObject(configv1.ObjectReference{Group: platformv1alpha1.GroupName, Resource: "platformoperators"})
-
-	// TODO: move platform operator ownership of rukpak objects out prior to rukpak or PO GA.
-	coBuilder.WithRelatedObject(configv1.ObjectReference{Group: rukpakv1alpha1.GroupVersion.Group, Resource: "bundles"})
-	coBuilder.WithRelatedObject(configv1.ObjectReference{Group: rukpakv1alpha1.GroupVersion.Group, Resource: "bundledeployments"})
+	// Set the static set of related objects
+	setStaticRelatedObjects(coBuilder, r.SystemNamespace)
 
 	poList := &platformv1alpha1.PlatformOperatorList{}
 	if err := r.List(ctx, poList); err != nil {
@@ -91,24 +84,23 @@ func (r *AggregatedClusterOperatorReconciler) Reconcile(ctx context.Context, req
 	}
 	if len(poList.Items) == 0 {
 		// No POs on cluster, everything is fine
-		// TODO: cleanup condition reasons.
-		//   1. use constants for condition reasons.
-		//   2. discuss/agree on reason values.
-		//   3. don't use abbreviations.
-		coBuilder.WithAvailable(metav1.ConditionTrue, "NoPOsFound", "No POs are present in the cluster")
-		coBuilder.WithProgressing(metav1.ConditionFalse, "", "No POs are present in the cluster")
+		coBuilder.WithAvailable(metav1.ConditionTrue, clusteroperator.ReasonAsExpected, "No platform operators are present in the cluster")
+		coBuilder.WithProgressing(metav1.ConditionFalse, clusteroperator.ReasonAsExpected, "No platform operators are present in the cluster")
 		return ctrl.Result{}, nil
 	}
 
 	// check whether any of the underlying PO resources are reporting
 	// any failing status states, and update the aggregate CO resource
 	// to reflect those failing PO resources.
+
+	// TODO: consider something more fine-grained than a catch-all "PlatformOperatorError" reason.
+	//   There's a non-negligible difference between "PO is explicitly failing installation" and "PO is not yet installed"
 	if statusErrorCheck := util.InspectPlatformOperators(poList); statusErrorCheck != nil {
-		coBuilder.WithAvailable(metav1.ConditionFalse, "POError", statusErrorCheck.Error())
+		coBuilder.WithAvailable(metav1.ConditionFalse, clusteroperator.ReasonPlatformOperatorError, statusErrorCheck.Error())
 		return ctrl.Result{}, nil
 	}
-	coBuilder.WithAvailable(metav1.ConditionTrue, "POsHealthy", "All POs in a successful state")
-	coBuilder.WithProgressing(metav1.ConditionFalse, "", "All POs in a successful state")
+	coBuilder.WithAvailable(metav1.ConditionTrue, clusteroperator.ReasonAsExpected, "All platform operators are in a successful state")
+	coBuilder.WithProgressing(metav1.ConditionFalse, clusteroperator.ReasonAsExpected, "All platform operators are in a successful state")
 
 	return ctrl.Result{}, nil
 }
@@ -121,4 +113,18 @@ func (r *AggregatedClusterOperatorReconciler) SetupWithManager(mgr ctrl.Manager)
 		}))).
 		Watches(&source.Kind{Type: &platformv1alpha1.PlatformOperator{}}, handler.EnqueueRequestsFromMapFunc(util.RequeueClusterOperator(mgr.GetClient(), clusteroperator.AggregateResourceName))).
 		Complete(r)
+}
+
+func setStaticRelatedObjects(coBuilder *clusteroperator.Builder, systemNamespace string) {
+	coBuilder.
+		WithRelatedObject(configv1.ObjectReference{Group: "", Resource: "namespaces", Name: systemNamespace}).
+
+		// NOTE: Group and resource can be referenced without name/namespace set, which is a signal
+		// that _ALL_ objects of that group/resource are related objects. This is useful for
+		// must-gather automation.
+		WithRelatedObject(configv1.ObjectReference{Group: platformv1alpha1.GroupName, Resource: "platformoperators"}).
+
+		// TODO: move platform operator ownership of rukpak objects out prior to rukpak or PO GA.
+		WithRelatedObject(configv1.ObjectReference{Group: rukpakv1alpha1.GroupVersion.Group, Resource: "bundles"}).
+		WithRelatedObject(configv1.ObjectReference{Group: rukpakv1alpha1.GroupVersion.Group, Resource: "bundledeployments"})
 }
