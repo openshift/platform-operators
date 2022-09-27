@@ -6,7 +6,7 @@ set -o errexit
 
 : "${KUBECONFIG:?}"
 : "${ARTIFACT_DIR:?}"
-: "${KUBECTL:=kubectl}"
+: "${KUBECTL:=oc}"
 
 function ensure_kubectl() {
     # Check whether we're running in downstream CI environments as the location for the
