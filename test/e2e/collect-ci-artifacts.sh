@@ -26,6 +26,7 @@ function ensure_kubectl() {
 
 function collect_artifacts() {
     commands=()
+    commands+=("get co platform-operators-core -o yaml")
     commands+=("get co platform-operators-aggregated -o yaml")
     commands+=("get platformoperators -o yaml")
     commands+=("get bundledeployments -o yaml")

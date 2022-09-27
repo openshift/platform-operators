@@ -19,24 +19,30 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"time"
 
 	configv1 "github.com/openshift/api/config/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/clock"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logr "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
-	platformv1alpha1 "github.com/openshift/api/platform/v1alpha1"
+	"github.com/openshift/platform-operators/internal/checker"
 	"github.com/openshift/platform-operators/internal/clusteroperator"
 )
 
 type CoreClusterOperatorReconciler struct {
 	client.Client
-	ReleaseVersion  string
-	SystemNamespace string
+	clock.Clock
+	checker.Checker
+
+	ReleaseVersion        string
+	SystemNamespace       string
+	AvailabilityThreshold time.Duration
 }
 
 //+kubebuilder:rbac:groups=platform.openshift.io,resources=platformoperators,verbs=list
@@ -63,13 +69,7 @@ func (r *CoreClusterOperatorReconciler) Reconcile(ctx context.Context, req ctrl.
 		}
 
 		log.Info("core clusteroperator does not exist. recreating it...", "name", clusteroperator.CoreResourceName)
-		core = &configv1.ClusterOperator{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: clusteroperator.CoreResourceName,
-			},
-			Status: configv1.ClusterOperatorStatus{},
-		}
-		return ctrl.Result{}, r.Create(ctx, core)
+		return ctrl.Result{}, r.Create(ctx, r.newClusterOperator())
 	}
 	defer func() {
 		if err := coWriter.UpdateStatus(ctx, core, coBuilder.GetStatus()); err != nil {
@@ -85,15 +85,65 @@ func (r *CoreClusterOperatorReconciler) Reconcile(ctx context.Context, req ctrl.
 
 	ensureRelatedObjects(coBuilder, r.SystemNamespace)
 
-	poList := &platformv1alpha1.PlatformOperatorList{}
-	if err := r.List(ctx, poList); err != nil {
+	log.Info("checking whether the platform operator manager is available")
+	available, err := r.CheckAvailability(ctx, core)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+	if available {
+		log.Info("manager is available")
+		coBuilder.WithAvailable(configv1.ConditionTrue, fmt.Sprintf("The platform operator manager is available at %s", r.ReleaseVersion), clusteroperator.ReasonAsExpected)
+		coBuilder.WithProgressing(configv1.ConditionFalse, "")
+		return ctrl.Result{}, nil
+	}
+
+	log.Info("manager failed an availability check")
+	// check whether we need to set D=T if this is the first time we've failed
+	// an availability check.
+	degraded := clusteroperator.FindStatusCondition(core.Status.Conditions, configv1.OperatorDegraded)
+	if degraded == nil || degraded.Status != configv1.ConditionTrue {
+		log.Info("setting degraded=true since this is the first violation")
+		// in the case that we've already recorded A=T, and this is the first time we've failed an
+		// availability check, then set D=T and retain the currently recorded A=? value to avoid
+		// prematurely setting A=F during transient events.
+		available := clusteroperator.FindStatusCondition(core.Status.Conditions, configv1.OperatorAvailable)
+		if available != nil && available.Status == configv1.ConditionTrue {
+			coBuilder.WithAvailable(configv1.ConditionTrue, available.Message, available.Reason)
+		}
+		coBuilder.WithDegraded(configv1.ConditionTrue)
 		return ctrl.Result{}, err
 	}
 
-	coBuilder.WithAvailable(configv1.ConditionTrue, fmt.Sprintf("The platform operator manager is available at %s", r.ReleaseVersion), clusteroperator.ReasonAsExpected)
-	coBuilder.WithProgressing(configv1.ConditionFalse, "")
+	currentTime := r.Clock.Now()
+	lastEncounteredTime := degraded.LastTransitionTime
+	adjustedTime := lastEncounteredTime.Add(r.AvailabilityThreshold)
+	log.Info("checking whether time spent in degraded state has exceeded the configured threshold",
+		"threshold", r.AvailabilityThreshold.String(),
+		"current", currentTime.String(),
+		"last", lastEncounteredTime.String(),
+		"adjusted", adjustedTime.String(),
+	)
 
-	return ctrl.Result{}, nil
+	// check whether we've exceeded the availability threshold by comparing
+	// the currently recorded lastTransistionTime, adding the threshold buffer, and
+	// verifying whether that adjusted timestamp is less than the current clock timestamp.
+	if adjustedTime.Before(currentTime) {
+		log.Info("adjusted timestamp has exceeded unavailability theshold: setting A=F and P=F")
+		// we've exceeded the configured threshold. note: A=F is the default value
+		// here, so we need to only set P=T and retain the already existing D=T value.
+		coBuilder.WithAvailable(configv1.ConditionFalse, "Exceeded platform operator availability timeout", "ExceededUnavailabilityThreshold")
+		coBuilder.WithProgressing(configv1.ConditionFalse, "Exceeded platform operator availability timeout")
+	}
+	return ctrl.Result{}, err
+}
+
+func (r *CoreClusterOperatorReconciler) newClusterOperator() *configv1.ClusterOperator {
+	return &configv1.ClusterOperator{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: clusteroperator.CoreResourceName,
+		},
+		Status: configv1.ClusterOperatorStatus{},
+	}
 }
 
 func ensureRelatedObjects(builder *clusteroperator.Builder, namespace string) {

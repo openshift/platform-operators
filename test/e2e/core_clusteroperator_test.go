@@ -27,7 +27,7 @@ var _ = Describe("core clusteroperator controller", func() {
 				if err := c.Get(ctx, types.NamespacedName{Name: clusteroperator.CoreResourceName}, co); err != nil {
 					return nil, err
 				}
-				return FindStatusCondition(co.Status.Conditions, configv1.OperatorAvailable), nil
+				return clusteroperator.FindStatusCondition(co.Status.Conditions, configv1.OperatorAvailable), nil
 			}).Should(And(
 				Not(BeNil()),
 				WithTransform(func(c *configv1.ClusterOperatorStatusCondition) configv1.ClusterStatusConditionType { return c.Type }, Equal(configv1.OperatorAvailable)),
