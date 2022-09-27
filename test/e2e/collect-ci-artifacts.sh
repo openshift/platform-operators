@@ -6,7 +6,7 @@ set -o errexit
 
 : "${KUBECONFIG:?}"
 : "${ARTIFACT_DIR:?}"
-: "${KUBECTL:=kubectl}"
+: "${KUBECTL:=oc}"
 
 function ensure_kubectl() {
     # Check whether we're running in a CI environment as the "oc" binary
@@ -18,7 +18,7 @@ function ensure_kubectl() {
     fi
 
     if ! which ${KUBECTL} &> /dev/null; then
-        echo "cannot find kubectl binary in \$PATH"
+        echo "cannot find the configured ${KUBECTL} binary in \$PATH"
         exit 1
     fi
 }
