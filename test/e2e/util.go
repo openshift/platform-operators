@@ -41,10 +41,8 @@ func HandleTestCaseFailure() error {
 		"ARTIFACT_DIR=" + testCaseDir,
 		"KUBECONFIG=" + os.Getenv("KUBECONFIG"),
 		"KUBECTL=" + os.Getenv("KUBECTL"),
+		"OPENSHIFT_CI=" + os.Getenv("OPENSHIFT_CI"),
 	}...)
 
-	if err := cmd.Run(); err != nil {
-		return err
-	}
-	return nil
+	return cmd.Run()
 }
