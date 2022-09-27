@@ -39,7 +39,7 @@ var _ = Describe("aggregated clusteroperator controller", func() {
 				Not(BeNil()),
 				WithTransform(func(c *configv1.ClusterOperatorStatusCondition) configv1.ClusterStatusConditionType { return c.Type }, Equal(configv1.OperatorAvailable)),
 				WithTransform(func(c *configv1.ClusterOperatorStatusCondition) configv1.ConditionStatus { return c.Status }, Equal(configv1.ConditionTrue)),
-				WithTransform(func(c *configv1.ClusterOperatorStatusCondition) string { return c.Reason }, Equal("NoPOsFound")),
+				WithTransform(func(c *configv1.ClusterOperatorStatusCondition) string { return c.Reason }, Equal("a")),
 				WithTransform(func(c *configv1.ClusterOperatorStatusCondition) string { return c.Message }, ContainSubstring("No POs are present in the cluster")),
 			))
 		})
@@ -54,7 +54,7 @@ var _ = Describe("aggregated clusteroperator controller", func() {
 				}
 				version := co.Status.Versions[0]
 
-				return version.Name != "" && version.Version != "", nil
+				return version.Name == "" && version.Version != "", nil
 			}).Should(BeTrue())
 		})
 		It("should consistently contain a populated status.relatedObjects array", func() {

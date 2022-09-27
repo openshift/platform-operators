@@ -121,6 +121,7 @@ unit: generate envtest ## Run unit tests.
 e2e: deploy test-e2e
 
 .PHONY: test-e2e
+TEST=should consistently report a healthy CO status back to the CVO
 FOCUS := $(if $(TEST),-v -focus "$(TEST)")
 JUNIT_REPORT := $(if $(ARTIFACT_DIR), -output-dir $(ARTIFACT_DIR) -junit-report junit_e2e.xml)
 test-e2e: ginkgo ## Run e2e tests
