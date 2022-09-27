@@ -9,6 +9,15 @@ set -o errexit
 : "${KUBECTL:=kubectl}"
 
 function ensure_kubectl() {
+    # Check whether we're running in downstream CI environments as the location for the
+    # "oc" binary is located at "/cli/oc" path. This is problematic as the /cli directory
+    # doesn't exist in the $PATH environment variable, which causes issues when running
+    # this script via the exec.Command Golang function.
+    if [[ "$OPENSHIFT_CI" == "true" ]]; then
+        echo "Detected the e2e suite is being run in CI environment. Adding the /cli to \$PATH"
+        export PATH=$PATH:/cli
+    fi
+
     if ! which ${KUBECTL} &> /dev/null; then
         echo "cannot find kubectl binary in \$PATH"
         exit 1
