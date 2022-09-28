@@ -38,7 +38,10 @@ var _ = Describe("core clusteroperator controller", func() {
 		})
 	})
 
-	When("the core clusteroperator has been deleted", func() {
+	// TODO: disabling for now as https://github.com/openshift/cluster-version-operator/pull/840
+	// should result in controllers being able to assume the CVO will manage the ClusterOperator
+	// resource for us.
+	PWhen("the core clusteroperator has been deleted", func() {
 		It("should be recreated", func() {
 			By("getting the core clusteroperator resource")
 			co := &configv1.ClusterOperator{}

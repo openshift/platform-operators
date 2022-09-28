@@ -58,7 +58,6 @@ func (r *AggregatedClusterOperatorReconciler) Reconcile(ctx context.Context, req
 
 	aggregatedCO := &configv1.ClusterOperator{}
 	if err := r.Get(ctx, req.NamespacedName, aggregatedCO); err != nil {
-		// TODO: recreate this resource when it's been deleted.
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 	defer func() {

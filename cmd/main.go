@@ -113,7 +113,7 @@ func main() {
 	if err = (&controllers.CoreClusterOperatorReconciler{
 		Client:                mgr.GetClient(),
 		Clock:                 clock.RealClock{},
-		Checker:               &checker.ListChecker{Client: mgr.GetClient()},
+		Checker:               checker.ListChecker{Client: mgr.GetClient()},
 		AvailabilityThreshold: clusteroperator.DefaultUnavailabilityThreshold,
 		ReleaseVersion:        clusteroperator.GetReleaseVariable(),
 		SystemNamespace:       util.PodNamespace(systemNamespace),

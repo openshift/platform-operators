@@ -4,9 +4,10 @@ import (
 	"context"
 	"time"
 
-	"github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+
+	configv1 "github.com/openshift/api/config/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/clock"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -14,7 +15,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	configv1 "github.com/openshift/api/config/v1"
 	"github.com/openshift/platform-operators/internal/checker"
 	"github.com/openshift/platform-operators/internal/clusteroperator"
 )
@@ -36,7 +36,6 @@ var _ = Describe("Core ClusterOperator Controller", func() {
 			co *configv1.ClusterOperator
 		)
 		BeforeEach(func() {
-			// TODO: need to create the CO first here...
 			mgr, err := manager.New(cfg, manager.Options{
 				MetricsBindAddress: "0",
 				Scheme:             scheme,
@@ -46,11 +45,11 @@ var _ = Describe("Core ClusterOperator Controller", func() {
 			c = mgr.GetClient()
 
 			r = &CoreClusterOperatorReconciler{
-				Client:                c,
-				Clock:                 clock.RealClock{},
-				Checker:               &checker.NoopChecker{},
-				ReleaseVersion:        "0.0.1",
-				SystemNamespace:       "",
+				Client: c,
+				Clock:  clock.RealClock{},
+				Checker: checker.NoopChecker{
+					Available: false,
+				},
 				AvailabilityThreshold: 15 * time.Second,
 			}
 
@@ -58,7 +57,7 @@ var _ = Describe("Core ClusterOperator Controller", func() {
 			go func() { Expect(mgr.GetCache().Start(ctx)) }()
 			Expect(mgr.GetCache().WaitForCacheSync(ctx)).To(BeTrue())
 
-			co = r.newClusterOperator()
+			co = clusteroperator.NewClusterOperator(clusteroperator.CoreResourceName)
 			Expect(c.Create(ctx, co)).To(Succeed())
 		})
 		AfterEach(func() {
@@ -79,7 +78,7 @@ var _ = Describe("Core ClusterOperator Controller", func() {
 			err = r.Get(context.Background(), types.NamespacedName{Name: clusteroperator.CoreResourceName}, co)
 			Expect(err).To(BeNil())
 
-			ginkgo.GinkgoT().Logf("waiting for the clusteroperator status to report an unavailable status: %v", co.Status.Conditions)
+			GinkgoT().Logf("waiting for the clusteroperator status to report an unavailable status: %v", co.Status.Conditions)
 
 			degraded := clusteroperator.FindStatusCondition(co.Status.Conditions, configv1.OperatorDegraded)
 			Expect(degraded).ToNot(BeNil())
@@ -98,14 +97,8 @@ var _ = Describe("Core ClusterOperator Controller", func() {
 				if err := r.Get(context.Background(), types.NamespacedName{Name: clusteroperator.CoreResourceName}, co); err != nil {
 					return false, err
 				}
-				ginkgo.GinkgoT().Logf("waiting for the clusteroperator status to report an unavailable status: %v", co.Status.Conditions)
-
 				available := clusteroperator.FindStatusCondition(co.Status.Conditions, configv1.OperatorAvailable)
-				if available == nil || available.Status != configv1.ConditionFalse {
-					return false, nil
-				}
-				ginkgo.GinkgoT().Logf("clusteroperator is reporting an unavailable status")
-				return true, nil
+				return available == nil || available.Status != configv1.ConditionFalse, nil
 			}).Should(BeTrue())
 		})
 	})

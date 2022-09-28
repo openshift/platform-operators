@@ -18,12 +18,11 @@ package controllers
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
 	configv1 "github.com/openshift/api/config/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/clock"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
@@ -33,6 +32,16 @@ import (
 
 	"github.com/openshift/platform-operators/internal/checker"
 	"github.com/openshift/platform-operators/internal/clusteroperator"
+)
+
+// TODO(tflannag): Appropriately set the "Progressing" status condition
+// type during cluster upgrade events.
+// FIXME(tflannag): I'm seeing unit test flakes where we're bumping
+// the lastTransistionTime value despite being in the same state as
+// before which is a bug.
+
+var (
+	errUnavailable = errors.New("platform operators manager has failed an availability check")
 )
 
 type CoreClusterOperatorReconciler struct {
@@ -64,12 +73,7 @@ func (r *CoreClusterOperatorReconciler) Reconcile(ctx context.Context, req ctrl.
 
 	core := &configv1.ClusterOperator{}
 	if err := r.Get(ctx, req.NamespacedName, core); err != nil {
-		if !apierrors.IsNotFound(err) {
-			return ctrl.Result{}, err
-		}
-
-		log.Info("core clusteroperator does not exist. recreating it...", "name", clusteroperator.CoreResourceName)
-		return ctrl.Result{}, r.Create(ctx, r.newClusterOperator())
+		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 	defer func() {
 		if err := coWriter.UpdateStatus(ctx, core, coBuilder.GetStatus()); err != nil {
@@ -77,86 +81,77 @@ func (r *CoreClusterOperatorReconciler) Reconcile(ctx context.Context, req ctrl.
 		}
 	}()
 
-	// Set the default CO status conditions: Progressing=True, Degraded=False, Available=False
-	coBuilder.WithProgressing(configv1.ConditionTrue, "")
-	coBuilder.WithDegraded(configv1.ConditionFalse)
-	coBuilder.WithAvailable(configv1.ConditionFalse, "", "")
-	coBuilder.WithVersion("operator", r.ReleaseVersion)
+	// Add the default ClusterOperator status configurations to the builder instance.
+	clusteroperator.SetDefaultStatusConditions(coBuilder, r.ReleaseVersion)
+	clusteroperator.SetDefaultRelatedObjects(coBuilder, r.SystemNamespace)
 
-	ensureRelatedObjects(coBuilder, r.SystemNamespace)
-
-	log.Info("checking whether the platform operator manager is available")
-	available, err := r.CheckAvailability(ctx, core)
-	if err != nil {
-		return ctrl.Result{}, err
-	}
-	if available {
-		log.Info("manager is available")
+	// check whether the we're currently passing the availability checks. note: in
+	// the case where we were previously failing these checks, and we now have passed
+	// them, the expectation is that we're now setting an A=T state and purging any
+	// D=T states.
+	if available := r.CheckAvailability(ctx, core); available {
 		coBuilder.WithAvailable(configv1.ConditionTrue, fmt.Sprintf("The platform operator manager is available at %s", r.ReleaseVersion), clusteroperator.ReasonAsExpected)
 		coBuilder.WithProgressing(configv1.ConditionFalse, "")
+		coBuilder.WithDegraded(configv1.ConditionFalse)
 		return ctrl.Result{}, nil
 	}
 
 	log.Info("manager failed an availability check")
-	// check whether we need to set D=T if this is the first time we've failed
-	// an availability check.
-	degraded := clusteroperator.FindStatusCondition(core.Status.Conditions, configv1.OperatorDegraded)
-	if degraded == nil || degraded.Status != configv1.ConditionTrue {
+	// we failed the availability checks, and now need to determine whether we to set
+	// D=T if this is the first time we've failed an availability check to avoid
+	// prematurely setting A=F during transient events.
+	if meetsDegradedStatusCriteria(core) {
 		log.Info("setting degraded=true since this is the first violation")
-		// in the case that we've already recorded A=T, and this is the first time we've failed an
-		// availability check, then set D=T and retain the currently recorded A=? value to avoid
-		// prematurely setting A=F during transient events.
+		// avoid stomping on the current A=T status condition value if that
+		// status condition type was previously set.
 		available := clusteroperator.FindStatusCondition(core.Status.Conditions, configv1.OperatorAvailable)
 		if available != nil && available.Status == configv1.ConditionTrue {
 			coBuilder.WithAvailable(configv1.ConditionTrue, available.Message, available.Reason)
 		}
 		coBuilder.WithDegraded(configv1.ConditionTrue)
-		return ctrl.Result{}, err
+		return ctrl.Result{}, errUnavailable
 	}
+	// check whether the time spent in the the D=T state has exceeded the configured
+	// threshold, and mark the ClusterOperator as unavailable.
+	if r.timeInDegradedStateExceedsThreshold(ctx, core) {
+		log.Info("adjusted timestamp has exceeded unavailability theshold: setting A=F and P=F")
 
-	currentTime := r.Clock.Now()
-	lastEncounteredTime := degraded.LastTransitionTime
+		coBuilder.WithAvailable(configv1.ConditionFalse, "Exceeded platform operator availability timeout", "ExceededUnavailabilityThreshold")
+		coBuilder.WithProgressing(configv1.ConditionFalse, "Exceeded platform operator availability timeout")
+		coBuilder.WithDegraded(configv1.ConditionTrue)
+	}
+	return ctrl.Result{}, errUnavailable
+}
+
+func meetsDegradedStatusCriteria(co *configv1.ClusterOperator) bool {
+	degraded := clusteroperator.FindStatusCondition(co.Status.Conditions, configv1.OperatorDegraded)
+	return degraded == nil || degraded.Status != configv1.ConditionTrue
+}
+
+func (r *CoreClusterOperatorReconciler) timeInDegradedStateExceedsThreshold(ctx context.Context, co *configv1.ClusterOperator) bool {
+	currentTime := r.Now()
+	lastEncounteredTime := clusteroperator.FindStatusCondition(co.Status.Conditions, configv1.OperatorDegraded).LastTransitionTime
 	adjustedTime := lastEncounteredTime.Add(r.AvailabilityThreshold)
-	log.Info("checking whether time spent in degraded state has exceeded the configured threshold",
+
+	logr.FromContext(ctx).Info("checking whether time spent in degraded state has exceeded the configured threshold",
 		"threshold", r.AvailabilityThreshold.String(),
 		"current", currentTime.String(),
 		"last", lastEncounteredTime.String(),
 		"adjusted", adjustedTime.String(),
 	)
-
 	// check whether we've exceeded the availability threshold by comparing
 	// the currently recorded lastTransistionTime, adding the threshold buffer, and
 	// verifying whether that adjusted timestamp is less than the current clock timestamp.
-	if adjustedTime.Before(currentTime) {
-		log.Info("adjusted timestamp has exceeded unavailability theshold: setting A=F and P=F")
-		// we've exceeded the configured threshold. note: A=F is the default value
-		// here, so we need to only set P=T and retain the already existing D=T value.
-		coBuilder.WithAvailable(configv1.ConditionFalse, "Exceeded platform operator availability timeout", "ExceededUnavailabilityThreshold")
-		coBuilder.WithProgressing(configv1.ConditionFalse, "Exceeded platform operator availability timeout")
-	}
-	return ctrl.Result{}, err
-}
-
-func (r *CoreClusterOperatorReconciler) newClusterOperator() *configv1.ClusterOperator {
-	return &configv1.ClusterOperator{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: clusteroperator.CoreResourceName,
-		},
-		Status: configv1.ClusterOperatorStatus{},
-	}
-}
-
-func ensureRelatedObjects(builder *clusteroperator.Builder, namespace string) {
-	builder.WithRelatedObject("", "namespaces", "", namespace)
-	builder.WithRelatedObject("platform.openshift.io", "platformoperators", "", "")
-	builder.WithRelatedObject("core.rukpak.io", "bundles", "", "")
-	builder.WithRelatedObject("core.rukpak.io", "bundledeployments", "", "")
+	return adjustedTime.Before(currentTime)
 }
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *CoreClusterOperatorReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&configv1.ClusterOperator{}, builder.WithPredicates(predicate.NewPredicateFuncs(func(object client.Object) bool {
+			// TODO(tflannag): Investigate using using a label selector to avoid caching
+			// all clusteroperator resources, and then filtering for the "core" clusteroperator
+			// resource from that shared cache.
 			return object.GetName() == clusteroperator.CoreResourceName
 		}))).
 		Complete(r)

@@ -33,7 +33,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
 
 	platformv1alpha1 "github.com/openshift/api/platform/v1alpha1"
 	//+kubebuilder:scaffold:imports
@@ -99,17 +98,3 @@ var _ = AfterSuite(func() {
 	err := testEnv.Stop()
 	Expect(err).NotTo(HaveOccurred())
 })
-
-func StartTestManager(mgr manager.Manager) context.CancelFunc {
-	// TODO:
-	//   Expected
-	// <*cache.ErrCacheNotStarted | 0x29a56e0>: {}
-	// to be nil
-	mgrCtx, cancel := context.WithCancel(ctx)
-	go func() {
-		defer GinkgoRecover()
-
-		Expect(mgr.Start(mgrCtx)).To(Succeed())
-	}()
-	return cancel
-}
