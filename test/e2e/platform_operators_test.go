@@ -43,7 +43,7 @@ var _ = Describe("platform operators controller", func() {
 		})
 		AfterEach(func() {
 			Expect(HandleTestCaseFailure()).To(BeNil())
-			Expect(c.Delete(ctx, po)).To(BeNil())
+			Expect(c.Delete(ctx, po, client.PropagationPolicy(metav1.DeletePropagationForeground))).To(BeNil())
 		})
 		It("should generate a Bundle Deployment with a metadata.Name that matches the platformoperator's metadata.Name", func() {
 			Eventually(func() error {
@@ -151,7 +151,7 @@ var _ = Describe("platform operators controller", func() {
 		})
 		AfterEach(func() {
 			Expect(HandleTestCaseFailure()).To(BeNil())
-			Expect(c.Delete(ctx, po)).To(BeNil())
+			Expect(c.Delete(ctx, po, client.PropagationPolicy(metav1.DeletePropagationForeground))).To(BeNil())
 		})
 
 		It("should eventually result in a failed attempt at sourcing that non-existent package", func() {
@@ -188,7 +188,7 @@ var _ = Describe("platform operators controller", func() {
 		})
 		AfterEach(func() {
 			Expect(HandleTestCaseFailure()).To(BeNil())
-			Expect(c.Delete(ctx, po)).To(BeNil())
+			Expect(c.Delete(ctx, po, client.PropagationPolicy(metav1.DeletePropagationForeground))).To(BeNil())
 		})
 
 		It("should eventually result in a failed attempt at applying the unpacked contents", func() {

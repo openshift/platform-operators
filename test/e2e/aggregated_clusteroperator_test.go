@@ -87,7 +87,7 @@ var _ = Describe("aggregated clusteroperator controller", func() {
 		})
 		AfterEach(func() {
 			Expect(HandleTestCaseFailure()).To(BeNil())
-			Expect(c.Delete(ctx, po)).To(BeNil())
+			Expect(c.Delete(ctx, po, client.PropagationPolicy(metav1.DeletePropagationForeground))).To(BeNil())
 		})
 
 		It("should eventually result in a successful application", func() {
@@ -156,7 +156,7 @@ var _ = Describe("aggregated clusteroperator controller", func() {
 		})
 		AfterEach(func() {
 			Expect(HandleTestCaseFailure()).To(BeNil())
-			Expect(c.Delete(ctx, po)).To(BeNil())
+			Expect(c.Delete(ctx, po, client.PropagationPolicy(metav1.DeletePropagationForeground))).To(BeNil())
 		})
 
 		It("should eventually result in a failed attempt at sourcing that non-existent package", func() {
@@ -223,8 +223,8 @@ var _ = Describe("aggregated clusteroperator controller", func() {
 		})
 		AfterEach(func() {
 			Expect(HandleTestCaseFailure()).To(BeNil())
-			Expect(c.Delete(ctx, invalid)).To(BeNil())
-			Expect(c.Delete(ctx, valid)).To(BeNil())
+			Expect(c.Delete(ctx, invalid, client.PropagationPolicy(metav1.DeletePropagationForeground))).To(BeNil())
+			Expect(c.Delete(ctx, valid, client.PropagationPolicy(metav1.DeletePropagationForeground))).To(BeNil())
 		})
 
 		It("should eventually result in a failed attempt at sourcing that non-existent package", func() {
