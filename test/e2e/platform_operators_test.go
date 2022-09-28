@@ -42,6 +42,7 @@ var _ = Describe("platform operators controller", func() {
 			Expect(c.Create(ctx, po)).To(BeNil())
 		})
 		AfterEach(func() {
+			Expect(HandleTestCaseFailure()).To(BeNil())
 			Expect(c.Delete(ctx, po)).To(BeNil())
 		})
 		It("should generate a Bundle Deployment with a metadata.Name that matches the platformoperator's metadata.Name", func() {
@@ -149,6 +150,7 @@ var _ = Describe("platform operators controller", func() {
 			Expect(c.Create(ctx, po)).To(BeNil())
 		})
 		AfterEach(func() {
+			Expect(HandleTestCaseFailure()).To(BeNil())
 			Expect(c.Delete(ctx, po)).To(BeNil())
 		})
 
@@ -185,6 +187,7 @@ var _ = Describe("platform operators controller", func() {
 			Expect(c.Create(ctx, po)).To(BeNil())
 		})
 		AfterEach(func() {
+			Expect(HandleTestCaseFailure()).To(BeNil())
 			Expect(c.Delete(ctx, po)).To(BeNil())
 		})
 
