@@ -67,14 +67,8 @@ func (r *AggregatedClusterOperatorReconciler) Reconcile(ctx context.Context, req
 	}()
 
 	// Set the default CO status conditions: Progressing=True, Degraded=False, Available=False
-	coBuilder.WithProgressing(configv1.ConditionTrue, "")
-	coBuilder.WithDegraded(configv1.ConditionFalse)
-	coBuilder.WithAvailable(configv1.ConditionFalse, "", "")
-	coBuilder.WithVersion("operator", r.ReleaseVersion)
-	coBuilder.WithRelatedObject("", "namespaces", "", r.SystemNamespace)
-	coBuilder.WithRelatedObject("platform.openshift.io", "platformoperators", "", "")
-	coBuilder.WithRelatedObject("core.rukpak.io", "bundles", "", "")
-	coBuilder.WithRelatedObject("core.rukpak.io", "bundledeployments", "", "")
+	clusteroperator.SetDefaultStatusConditions(coBuilder, r.ReleaseVersion)
+	clusteroperator.SetDefaultRelatedObjects(coBuilder, r.SystemNamespace)
 
 	poList := &platformv1alpha1.PlatformOperatorList{}
 	if err := r.List(ctx, poList); err != nil {
