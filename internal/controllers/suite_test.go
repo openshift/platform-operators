@@ -62,7 +62,7 @@ var _ = BeforeSuite(func() {
 
 	By("bootstrapping test environment")
 	testEnv = &envtest.Environment{
-		CRDDirectoryPaths:     []string{"../manifests", "../vendor/github.com/openshift/api/config/v1/"},
+		CRDDirectoryPaths:     []string{"../../manifests", "../../vendor/github.com/openshift/api/config/v1/"},
 		ErrorIfCRDPathMissing: true,
 	}
 

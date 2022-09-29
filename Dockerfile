@@ -6,7 +6,6 @@ COPY go.mod go.mod
 COPY go.sum go.sum
 COPY cmd cmd
 COPY api api
-COPY controllers controllers
 COPY internal internal
 COPY Makefile Makefile
 RUN make build
