@@ -34,7 +34,7 @@ var _ = Describe("aggregated clusteroperator controller", func() {
 				if err := c.Get(ctx, types.NamespacedName{Name: clusteroperator.AggregateResourceName}, co); err != nil {
 					return nil, err
 				}
-				return FindStatusCondition(co.Status.Conditions, configv1.OperatorAvailable), nil
+				return clusteroperator.FindStatusCondition(co.Status.Conditions, configv1.OperatorAvailable), nil
 			}).Should(And(
 				Not(BeNil()),
 				WithTransform(func(c *configv1.ClusterOperatorStatusCondition) configv1.ClusterStatusConditionType { return c.Type }, Equal(configv1.OperatorAvailable)),
@@ -111,7 +111,7 @@ var _ = Describe("aggregated clusteroperator controller", func() {
 				if err := c.Get(ctx, types.NamespacedName{Name: clusteroperator.AggregateResourceName}, co); err != nil {
 					return nil, err
 				}
-				return FindStatusCondition(co.Status.Conditions, configv1.OperatorAvailable), nil
+				return clusteroperator.FindStatusCondition(co.Status.Conditions, configv1.OperatorAvailable), nil
 			}).Should(And(
 				Not(BeNil()),
 				WithTransform(func(c *configv1.ClusterOperatorStatusCondition) configv1.ClusterStatusConditionType { return c.Type }, Equal(configv1.OperatorAvailable)),
@@ -180,7 +180,7 @@ var _ = Describe("aggregated clusteroperator controller", func() {
 				if err := c.Get(ctx, types.NamespacedName{Name: clusteroperator.AggregateResourceName}, co); err != nil {
 					return nil, err
 				}
-				return FindStatusCondition(co.Status.Conditions, configv1.OperatorAvailable), nil
+				return clusteroperator.FindStatusCondition(co.Status.Conditions, configv1.OperatorAvailable), nil
 			}).Should(And(
 				Not(BeNil()),
 				WithTransform(func(c *configv1.ClusterOperatorStatusCondition) configv1.ClusterStatusConditionType { return c.Type }, Equal(configv1.OperatorAvailable)),
@@ -263,7 +263,7 @@ var _ = Describe("aggregated clusteroperator controller", func() {
 				if err := c.Get(ctx, types.NamespacedName{Name: clusteroperator.AggregateResourceName}, co); err != nil {
 					return nil, err
 				}
-				return FindStatusCondition(co.Status.Conditions, configv1.OperatorAvailable), nil
+				return clusteroperator.FindStatusCondition(co.Status.Conditions, configv1.OperatorAvailable), nil
 			}).Should(And(
 				Not(BeNil()),
 				WithTransform(func(c *configv1.ClusterOperatorStatusCondition) configv1.ClusterStatusConditionType { return c.Type }, Equal(configv1.OperatorAvailable)),
@@ -274,14 +274,3 @@ var _ = Describe("aggregated clusteroperator controller", func() {
 		})
 	})
 })
-
-// FindStatusCondition finds the conditionType in conditions.
-// Note: manually vendored from o/library-go/pkg/config/clusteroperator/v1helpers/status.go.
-func FindStatusCondition(conditions []configv1.ClusterOperatorStatusCondition, conditionType configv1.ClusterStatusConditionType) *configv1.ClusterOperatorStatusCondition {
-	for i := range conditions {
-		if conditions[i].Type == conditionType {
-			return &conditions[i]
-		}
-	}
-	return nil
-}
