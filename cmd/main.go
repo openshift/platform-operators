@@ -35,8 +35,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	platformv1alpha1 "github.com/openshift/api/platform/v1alpha1"
-	"github.com/openshift/platform-operators/controllers"
 	"github.com/openshift/platform-operators/internal/clusteroperator"
+	"github.com/openshift/platform-operators/internal/controllers"
 	"github.com/openshift/platform-operators/internal/sourcer"
 	"github.com/openshift/platform-operators/internal/util"
 	//+kubebuilder:scaffold:imports
