@@ -113,9 +113,10 @@ lint: golangci-lint
 	GOLANGCI_LINT_CACHE=/tmp/golangci-cache $(GOLANGCI_LINT) run
 
 UNIT_TEST_DIRS=$(shell go list ./... | grep -v /test/)
+ENVTEST_OPTS ?= $(if $(OPENSHIFT_CI),--bin-dir=/tmp)
 .PHONY: unit
 unit: generate envtest ## Run unit tests.
-	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test -count=1 -short $(UNIT_TEST_DIRS)
+	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) $(ENVTEST_OPTS) -p path)" go test -count=1 -short $(UNIT_TEST_DIRS)
 
 .PHONY: e2e
 e2e: deploy test-e2e
