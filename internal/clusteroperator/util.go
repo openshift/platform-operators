@@ -2,6 +2,7 @@ package clusteroperator
 
 import (
 	configv1 "github.com/openshift/api/config/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // FindStatusCondition finds the conditionType in conditions.
@@ -13,6 +14,15 @@ func FindStatusCondition(conditions []configv1.ClusterOperatorStatusCondition, c
 		}
 	}
 	return nil
+}
+
+func NewClusterOperator(name string) *configv1.ClusterOperator {
+	return &configv1.ClusterOperator{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Status: configv1.ClusterOperatorStatus{},
+	}
 }
 
 // SetDefaultStatusConditions adds the default ClusterOperator status conditions to

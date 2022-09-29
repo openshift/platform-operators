@@ -23,6 +23,7 @@ import (
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
+	"k8s.io/utils/clock"
 
 	configv1 "github.com/openshift/api/config/v1"
 	operatorsv1alpha1 "github.com/operator-framework/api/pkg/operators/v1alpha1"
@@ -35,6 +36,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	platformv1alpha1 "github.com/openshift/api/platform/v1alpha1"
+	"github.com/openshift/platform-operators/internal/checker"
 	"github.com/openshift/platform-operators/internal/clusteroperator"
 	"github.com/openshift/platform-operators/internal/controllers"
 	"github.com/openshift/platform-operators/internal/sourcer"
@@ -99,13 +101,24 @@ func main() {
 	}
 	//+kubebuilder:scaffold:builder
 
-	// Add Aggregated CO controller to manager
+	// Add the core and aggregate ClusterOperator controllers to the manager.
 	if err = (&controllers.AggregatedClusterOperatorReconciler{
 		Client:          mgr.GetClient(),
 		ReleaseVersion:  clusteroperator.GetReleaseVariable(),
 		SystemNamespace: util.PodNamespace(systemNamespace),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "AggregatedCO")
+		setupLog.Error(err, "unable to create controller", "controller", "AggregatedClusterOperator")
+		os.Exit(1)
+	}
+	if err = (&controllers.CoreClusterOperatorReconciler{
+		Client:                mgr.GetClient(),
+		Clock:                 clock.RealClock{},
+		Checker:               checker.ListChecker{Client: mgr.GetClient()},
+		AvailabilityThreshold: clusteroperator.DefaultUnavailabilityThreshold,
+		ReleaseVersion:        clusteroperator.GetReleaseVariable(),
+		SystemNamespace:       util.PodNamespace(systemNamespace),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "CoreClusterOperator")
 		os.Exit(1)
 	}
 
