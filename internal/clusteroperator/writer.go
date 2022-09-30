@@ -2,9 +2,9 @@ package clusteroperator
 
 import (
 	"context"
-	"reflect"
 
 	configv1 "github.com/openshift/api/config/v1"
+	"k8s.io/apimachinery/pkg/api/equality"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -24,19 +24,16 @@ type Writer struct {
 }
 
 // UpdateStatus updates the clusteroperator object with the new status specified.
-func (w *Writer) UpdateStatus(ctx context.Context, existing *configv1.ClusterOperator, newStatus *configv1.ClusterOperatorStatus) error {
-	if newStatus == nil || existing == nil {
-		panic("input specified is <nil>")
+func (w *Writer) UpdateStatus(ctx context.Context, existingCO *configv1.ClusterOperator, newStatus configv1.ClusterOperatorStatus) error {
+	if existingCO == nil {
+		panic("BUG: existingCO parameter was nil")
 	}
 
-	existingStatus := existing.Status.DeepCopy()
-	if reflect.DeepEqual(existingStatus, newStatus) {
+	existingStatus := existingCO.Status
+	if equality.Semantic.DeepEqual(existingStatus, newStatus) {
 		return nil
 	}
 
-	existing.Status = *newStatus
-	if err := w.Status().Update(ctx, existing); err != nil {
-		return err
-	}
-	return nil
+	existingCO.Status = newStatus
+	return w.Status().Update(ctx, existingCO)
 }
