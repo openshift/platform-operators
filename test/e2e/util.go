@@ -37,12 +37,13 @@ func HandleTestCaseFailure() error {
 	cmd := exec.Command("/bin/bash", "-c", "./collect-ci-artifacts.sh")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	cmd.Env = append(cmd.Env, []string{
+	envVars := []string{
 		"ARTIFACT_DIR=" + testCaseDir,
 		"KUBECONFIG=" + os.Getenv("KUBECONFIG"),
 		"KUBECTL=" + os.Getenv("KUBECTL"),
 		"OPENSHIFT_CI=" + os.Getenv("OPENSHIFT_CI"),
-	}...)
+	}
+	cmd.Env = append(os.Environ(), envVars...)
 
 	return cmd.Run()
 }
