@@ -1,10 +1,12 @@
 approvers:
+- awgreene
 - bparees
 - joelanford
 - perdasilva
-- timflannagan
 reviewers:
-- exdx
-- tylerslaton
-- timflannagan
+- ankitathomas
+- awgreene
+- dtfranz
+- perdasilva
+- tmshort
 component: "OLM"
