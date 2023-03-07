@@ -196,7 +196,7 @@ ENVTEST_VERSION ?= cd0058a # v0.12.3
 GINKGO_VERSION ?= v2.1.4
 GOLANGCI_LINT_VERSION ?= v1.48.0
 KIND_VERSION ?= v0.14.0
-YQ_VERSION ?= latest
+YQ_VERSION ?= v4.30.8
 
 KUSTOMIZE_INSTALL_SCRIPT ?= "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"
 .PHONY: kustomize
