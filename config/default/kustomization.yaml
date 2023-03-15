@@ -41,12 +41,40 @@ bases:
 # [PROMETHEUS] To enable prometheus monitor, uncomment all sections with 'PROMETHEUS'.
 #- ../prometheus
 
-patchesStrategicMerge:
+patches:
 # Protect the /metrics endpoint by putting it behind auth.
 # If you want your controller-manager to expose the /metrics
 # endpoint w/o any authn/z, please comment the following line.
-- manager_auth_proxy_patch.yaml
+- path: manager_auth_proxy_patch.yaml
 
+# Adding the workload pinning annotation to all deployment pod templates.
+# This allows the workload pinning webhook to know which pods to modify
+# with the specific custom resources for workload pinning to work.
+- patch: |-
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: platform-operators-*
+    spec:
+      template:
+        metadata:
+          annotations:
+            target.workload.openshift.io/management: '{"effect": "PreferredDuringScheduling"}' 
+  target:
+    kind: Deployment
+
+# Adding the workload pinning annotation to the namespace.
+# In order for any workload pinned pod to run in this namespace, the below
+# annotation is required.
+- patch: |-
+    apiVersion: v1
+    kind: Namespace
+    metadata:
+      annotations:
+        workload.openshift.io/allowed: "management"
+      name: openshift-*
+  target:
+    kind: Namespace
 # Mount the controller config file for loading manager configurations
 # through a ComponentConfig type
 #- manager_config_patch.yaml
