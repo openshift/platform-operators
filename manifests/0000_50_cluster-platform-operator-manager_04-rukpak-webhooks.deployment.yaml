@@ -25,6 +25,7 @@ spec:
         include.release.openshift.io/self-managed-high-availability: "true"
         include.release.openshift.io/single-node-developer: "true"
         release.openshift.io/feature-set: TechPreviewNoUpgrade
+        target.workload.openshift.io/management: '{"effect": "PreferredDuringScheduling"}'
       labels:
         app: webhooks
     spec:

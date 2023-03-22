@@ -23,6 +23,7 @@ spec:
         include.release.openshift.io/single-node-developer: "true"
         kubectl.kubernetes.io/default-container: manager
         release.openshift.io/feature-set: TechPreviewNoUpgrade
+        target.workload.openshift.io/management: '{"effect": "PreferredDuringScheduling"}'
       labels:
         control-plane: controller-manager
     spec:
