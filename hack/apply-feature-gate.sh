@@ -63,12 +63,6 @@ function waitForRunningPod() {
 }
 export -f waitForRunningPod
 
-function ClusterPlatformOperatorPodsCreated() {
-  waitForRunningPod "platform-operators-rukpak-core" "Waiting for rukpak core creation"
-  waitForRunningPod "platform-operators-rukpak-webhooks" "Waiting for rukpak webhooks creation"
-}
-export -f ClusterPlatformOperatorPodsCreated
-
 function waitForClusterPlatformOperatorPodsReadiness() {
   echo "$(date -u --rfc-3339=seconds) - Wait for PO operands to be ready"
   waitFor 10m ${KUBECTL} wait --all -n "${PO_NAMESPACE}" --for=condition=ready pods
@@ -106,6 +100,5 @@ function execute() {
 export -f execute
 
 applyFeatureGate
-waitFor 30m ClusterPlatformOperatorPodsCreated
 waitForClusterPlatformOperatorPodsReadiness
 waitForAggregatedPlatformOperatorCORollout
