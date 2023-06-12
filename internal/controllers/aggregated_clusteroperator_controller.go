@@ -20,7 +20,6 @@ import (
 	"context"
 
 	configv1 "github.com/openshift/api/config/v1"
-	rukpakv1alpha1 "github.com/operator-framework/rukpak/api/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
@@ -122,9 +121,5 @@ func setStaticRelatedObjects(coBuilder *clusteroperator.Builder, systemNamespace
 		// NOTE: Group and resource can be referenced without name/namespace set, which is a signal
 		// that _ALL_ objects of that group/resource are related objects. This is useful for
 		// must-gather automation.
-		WithRelatedObject(configv1.ObjectReference{Group: platformv1alpha1.GroupName, Resource: "platformoperators"}).
-
-		// TODO: move platform operator ownership of rukpak objects out prior to rukpak or PO GA.
-		WithRelatedObject(configv1.ObjectReference{Group: rukpakv1alpha1.GroupVersion.Group, Resource: "bundles"}).
-		WithRelatedObject(configv1.ObjectReference{Group: rukpakv1alpha1.GroupVersion.Group, Resource: "bundledeployments"})
+		WithRelatedObject(configv1.ObjectReference{Group: platformv1alpha1.GroupName, Resource: "platformoperators"})
 }

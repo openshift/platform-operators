@@ -63,7 +63,7 @@ var _ = Describe("aggregated clusteroperator controller", func() {
 				if err := c.Get(ctx, types.NamespacedName{Name: clusteroperator.AggregateResourceName}, co); err != nil {
 					return false, err
 				}
-				return len(co.Status.RelatedObjects) == 4, nil
+				return len(co.Status.RelatedObjects) == 2, nil
 			}).Should(BeTrue())
 		})
 	})
