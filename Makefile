@@ -60,7 +60,11 @@ RBAC_LIST = rbac.authorization.k8s.io_v1_clusterrole_platform-operators-manager-
 	rbac.authorization.k8s.io_v1_clusterrolebinding_platform-operators-manager-rolebinding.yaml \
 	rbac.authorization.k8s.io_v1_clusterrolebinding_platform-operators-proxy-rolebinding.yaml \
 	rbac.authorization.k8s.io_v1_role_platform-operators-leader-election-role.yaml \
-	rbac.authorization.k8s.io_v1_rolebinding_platform-operators-leader-election-rolebinding.yaml
+	rbac.authorization.k8s.io_v1_rolebinding_platform-operators-leader-election-rolebinding.yaml \
+	rbac.authorization.k8s.io_v1_clusterrole_platform-operators-rukpak-bundle-reader.yaml \
+	rbac.authorization.k8s.io_v1_clusterrole_platform-operators-rukpak-bundle-uploader.yaml \
+	rbac.authorization.k8s.io_v1_clusterrole_platform-operators-rukpak-core-admin.yaml \
+	rbac.authorization.k8s.io_v1_clusterrolebinding_platform-operators-rukpak-core-admin.yaml
 
 # Generate manifests e.g. CRD, RBAC etc.
 .PHONY: manifests
@@ -73,6 +77,19 @@ manifests: generate yq kustomize
 
 	@# Move the vendored PlatformOperator CRD from o/api to the manifests folder
 	cp $(ROOT_DIR)/vendor/github.com/openshift/api/platform/v1alpha1/platformoperators.crd.yaml manifests/0000_50_cluster-platform-operator-manager_00-platformoperator.crd.yaml
+
+	@# Move all of the rukpak manifests into the manifests folder
+	$(MV_TMP_DIR)/apiextensions.k8s.io_v1_customresourcedefinition_bundledeployments.core.rukpak.io.yaml manifests/0000_50_cluster-platform-operator-manager_00-rukpak-bundledeployments.crd.yaml
+	$(MV_TMP_DIR)/apiextensions.k8s.io_v1_customresourcedefinition_bundles.core.rukpak.io.yaml manifests/0000_50_cluster-platform-operator-manager_00-rukpak-bundles.crd.yaml
+	$(MV_TMP_DIR)/v1_configmap_platform-operators-rukpak-core-tls.yaml manifests/0000_50_cluster-platform-operator-manager_01-core-ca.cm.yaml
+	$(MV_TMP_DIR)/v1_configmap_platform-operators-rukpak-webhook-tls.yaml manifests/0000_50_cluster-platform-operator-manager_01-webhook-ca.cm.yaml
+	$(MV_TMP_DIR)/v1_serviceaccount_platform-operators-rukpak-core-admin.yaml manifests/0000_50_cluster-platform-operator-manager_01-rukpak-core-admin.sa.yaml
+	$(MV_TMP_DIR)/v1_serviceaccount_platform-operators-rukpak-webhooks-admin.yaml manifests/0000_50_cluster-platform-operator-manager_01-rukpak-webhooks-admin.sa.yaml
+	$(MV_TMP_DIR)/v1_service_platform-operators-rukpak-core.yaml manifests/0000_50_cluster-platform-operator-manager_02-rukpak-core.service.yaml
+	$(MV_TMP_DIR)/v1_service_platform-operators-rukpak-webhook-service.yaml manifests/0000_50_cluster-platform-operator-manager_02-rukpak-webhook.service.yaml
+	$(MV_TMP_DIR)/apps_v1_deployment_platform-operators-rukpak-webhooks.yaml manifests/0000_50_cluster-platform-operator-manager_04-rukpak-webhooks.deployment.yaml
+	$(MV_TMP_DIR)/apps_v1_deployment_platform-operators-rukpak-core.yaml manifests/0000_50_cluster-platform-operator-manager_04-rukpak-core.deployment.yaml
+	$(MV_TMP_DIR)/admissionregistration.k8s.io_v1_validatingwebhookconfiguration_platform-operators-rukpak-validating-webhook-configuration.yaml manifests/0000_50_cluster-platform-operator-manager_05-rukpak.validating-webhook-configuration.yaml
 
 	@# Move all of the platform operators manifests into the manifests folder
 	$(MV_TMP_DIR)/v1_namespace_openshift-platform-operators.yaml manifests/0000_50_cluster-platform-operator-manager_00-namespace.yaml

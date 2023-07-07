@@ -17,6 +17,12 @@ status:
   - group: platform.openshift.io
     name: ""
     resource: platformoperators
+  - group: core.rukpak.io
+    name: ""
+    resource: bundles
+  - group: core.rukpak.io
+    name: ""
+    resource: bundledeployments
   versions:
   - name: operator
     version: 0.0.1-snapshot
