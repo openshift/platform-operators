@@ -13,7 +13,11 @@ RUN make build
 FROM registry.ci.openshift.org/ocp/4.14:base
 
 COPY manifests /manifests
-LABEL io.openshift.release.operator=true
+
+# ncdc: temporarily commenting out this label so this image is not included in the release payload. We are moving the
+# rukpak manifests to openshift/cluster-olm-operator and have to do it through a series of PRs. The easiest way to do
+# the move is to stop including platform-operators in the payload, then add it back after the move is done.
+# LABEL io.openshift.release.operator=true
 
 COPY --from=builder /build/bin/manager /
 USER 1001
