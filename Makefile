@@ -10,7 +10,7 @@ BIN_DIR := bin
 CONTAINER_RUNTIME ?= docker
 KUBECTL ?= kubectl
 KIND_CLUSTER_NAME ?= kind
-GO_INSTALL_OPTS ?= "-mod=readonly"
+GO_INSTALL_OPTS ?= "-mod=mod"
 TMP_DIR := $(shell mktemp -d -t manifests-$(date +%Y-%m-%d-%H-%M-%S)-XXXXXXXXXX)
 MV_TMP_DIR := mv $(TMP_DIR)
 
@@ -177,7 +177,7 @@ KUSTOMIZE_VERSION ?= v4.2.0
 CONTROLLER_TOOLS_VERSION ?= v0.9.0
 ENVTEST_VERSION ?= latest
 GINKGO_VERSION ?= v2.1.4
-GOLANGCI_LINT_VERSION ?= v1.48.0
+GOLANGCI_LINT_VERSION ?= v1.51.0
 KIND_VERSION ?= v0.14.0
 YQ_VERSION ?= v4.30.8
 

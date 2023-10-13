@@ -134,7 +134,7 @@ func (r *PlatformOperatorReconciler) ensureDesiredBundleDeployment(ctx context.C
 		}
 		sourcedBundle, err := r.Sourcer.Source(ctx, po)
 		if err != nil {
-			return nil, fmt.Errorf("%v: %w", err, errSourceFailed)
+			return nil, fmt.Errorf("%v: %w", err, errSourceFailed) //nolint:errorlint
 		}
 		bd = applier.NewBundleDeployment(po, sourcedBundle.Image)
 		if err := r.Create(ctx, bd); err != nil {
