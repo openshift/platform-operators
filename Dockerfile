@@ -1,6 +1,7 @@
 FROM registry.ci.openshift.org/ocp/builder:rhel-8-golang-1.20-openshift-4.15 AS builder
 
 WORKDIR /build
+COPY .bingo .bingo
 COPY vendor vendor
 COPY go.mod go.mod
 COPY go.sum go.sum
