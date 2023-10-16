@@ -10,7 +10,6 @@ BIN_DIR := bin
 CONTAINER_RUNTIME ?= docker
 KUBECTL ?= kubectl
 KIND_CLUSTER_NAME ?= kind
-GO_INSTALL_OPTS ?= "-mod=readonly"
 TMP_DIR := $(shell mktemp -d -t manifests-$(date +%Y-%m-%d-%H-%M-%S)-XXXXXXXXXX)
 MV_TMP_DIR := mv $(TMP_DIR)
 
@@ -26,6 +25,9 @@ endif
 # Options are set to exit when a recipe line exits non-zero or a piped command fails.
 SHELL = /usr/bin/env bash -o pipefail
 .SHELLFLAGS = -ec
+
+# bingo manages consistent tooling versions for things like kind, kustomize, etc.
+include .bingo/Variables.mk
 
 .PHONY: all
 all: build
@@ -50,7 +52,7 @@ help: ## Display this help.
 ##@ Development
 
 .PHONY: generate
-generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
+generate: $(CONTROLLER_GEN) ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
 	$(CONTROLLER_GEN) object:headerFile=./hack/boilerplate.go.txt paths=./api/...
 	$(CONTROLLER_GEN) rbac:roleName=manager-role paths=./... output:rbac:artifacts:config=config/rbac
 
@@ -64,7 +66,7 @@ RBAC_LIST = rbac.authorization.k8s.io_v1_clusterrole_platform-operators-manager-
 
 # Generate manifests e.g. CRD, RBAC etc.
 .PHONY: manifests
-manifests: generate yq kustomize
+manifests: generate $(YQ) $(KUSTOMIZE)
 	$(KUSTOMIZE) build config/default -o $(TMP_DIR)/
 	ls $(TMP_DIR)
 
@@ -90,7 +92,7 @@ manifests: generate yq kustomize
 
 .PHONY: lint
 lint: ## Run golangci-lint linter checks.
-lint: golangci-lint
+lint: $(GOLANGCI_LINT)
 	@# Set the golangci-lint cache directory to a directory that's
 	@# writable in downstream CI.
 	GOLANGCI_LINT_CACHE=/tmp/golangci-cache $(GOLANGCI_LINT) run
@@ -98,8 +100,8 @@ lint: golangci-lint
 UNIT_TEST_DIRS=$(shell go list ./... | grep -v /test/)
 ENVTEST_OPTS ?= $(if $(OPENSHIFT_CI),--bin-dir=/tmp)
 .PHONY: unit
-unit: generate envtest ## Run unit tests.
-	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) $(ENVTEST_OPTS) -p path)" go test -count=1 -short $(UNIT_TEST_DIRS)
+unit: generate $(SETUP_ENVTEST) ## Run unit tests.
+	KUBEBUILDER_ASSETS="$(shell $(SETUP_ENVTEST) use $(ENVTEST_K8S_VERSION) $(ENVTEST_OPTS) -p path)" go test -count=1 -short $(UNIT_TEST_DIRS)
 
 .PHONY: e2e
 e2e: deploy test-e2e
@@ -107,7 +109,7 @@ e2e: deploy test-e2e
 .PHONY: test-e2e
 FOCUS := $(if $(TEST),-v -focus "$(TEST)")
 JUNIT_REPORT := $(if $(ARTIFACT_DIR), -output-dir $(ARTIFACT_DIR) -junit-report junit_e2e.xml)
-test-e2e: ginkgo ## Run e2e tests
+test-e2e: $(GINKGO) ## Run e2e tests
 	$(GINKGO) -trace -progress $(JUNIT_REPORT) $(FOCUS) test/e2e
 
 .PHONY: verify
@@ -144,76 +146,14 @@ tidy:
 	go mod tidy
 
 .PHONY: kind-load
-kind-load: build-container kind
+kind-load: build-container $(KIND)
 	$(KIND) load docker-image $(IMG)
 
 .PHONY: kind-cluster
-kind-cluster: kind
+kind-cluster: $(KIND)
 	$(KIND) get clusters | grep $(KIND_CLUSTER_NAME) || $(KIND) create cluster --name $(KIND_CLUSTER_NAME)
 
 .PHONY: run
-run: build-container
+run: build-container $(KUSTOMIZE)
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default | $(KUBECTL) apply -f -
-
-##@ Build Dependencies
-
-## Location to install dependencies to
-LOCALBIN ?= $(shell pwd)/bin
-$(LOCALBIN):
-	mkdir -p $(LOCALBIN)
-
-## Tool Binaries
-KUSTOMIZE ?= $(LOCALBIN)/kustomize
-CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
-ENVTEST ?= $(LOCALBIN)/setup-envtest
-GINKGO ?= $(LOCALBIN)/ginkgo
-GOLANGCI_LINT ?= $(LOCALBIN)/golangci-lint
-KIND ?= $(LOCALBIN)/kind
-YQ ?= $(LOCALBIN)/yq
-
-## Tool Versions
-KUSTOMIZE_VERSION ?= v4.2.0
-CONTROLLER_TOOLS_VERSION ?= v0.9.0
-ENVTEST_VERSION ?= b9940ed # v0.14.4
-GINKGO_VERSION ?= v2.1.4
-GOLANGCI_LINT_VERSION ?= v1.48.0
-KIND_VERSION ?= v0.14.0
-YQ_VERSION ?= v4.30.8
-
-KUSTOMIZE_INSTALL_SCRIPT ?= "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"
-.PHONY: kustomize
-kustomize: $(KUSTOMIZE) ## Download kustomize locally if necessary.
-$(KUSTOMIZE): $(LOCALBIN)
-	rm -f $(KUSTOMIZE)
-	curl -s $(KUSTOMIZE_INSTALL_SCRIPT) | bash -s -- $(subst v,,$(KUSTOMIZE_VERSION)) $(LOCALBIN)
-
-.PHONY: controller-gen
-controller-gen: $(CONTROLLER_GEN) ## Download controller-gen locally if necessary.
-$(CONTROLLER_GEN): $(LOCALBIN)
-	GOBIN=$(LOCALBIN) go install $(GO_INSTALL_OPTS) sigs.k8s.io/controller-tools/cmd/controller-gen@$(CONTROLLER_TOOLS_VERSION)
-
-.PHONY: envtest
-envtest: $(ENVTEST) ## Download envtest-setup locally if necessary.
-$(ENVTEST): $(LOCALBIN)
-	GOBIN=$(LOCALBIN) go install $(GO_INSTALL_OPTS) sigs.k8s.io/controller-runtime/tools/setup-envtest@$(ENVTEST_VERSION)
-
-.PHONY: ginkgo
-ginkgo: $(GINKGO)
-$(GINKGO): $(LOCALBIN) ## Download ginkgo locally if necessary.
-	GOBIN=$(LOCALBIN) go install $(GO_INSTALL_OPTS) github.com/onsi/ginkgo/v2/ginkgo@$(GINKGO_VERSION)
-
-.PHONY: golangci-lint
-golangci-lint: $(GOLANGCI_LINT)
-$(GOLANGCI_LINT): $(LOCALBIN) ## Download golangci-lint locally if necessary.
-	GOBIN=$(LOCALBIN) go install $(GO_INSTALL_OPTS) github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION)
-
-.PHONY: kind
-kind: $(KIND) ## Download kind locally if necessary.
-$(KIND): $(LOCALBIN)
-	GOBIN=$(LOCALBIN) go install $(GO_INSTALL_OPTS) sigs.k8s.io/kind@$(KIND_VERSION)
-
-.PHONY: yq
-yq: $(YQ) ## Download yq locally if necessary.
-$(YQ): $(LOCALBIN)
-	GOBIN=$(LOCALBIN) go install $(GO_INSTALL_OPTS) github.com/mikefarah/yq/v4@$(YQ_VERSION)
