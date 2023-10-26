@@ -66,7 +66,7 @@ RBAC_LIST = rbac.authorization.k8s.io_v1_clusterrole_platform-operators-manager-
 
 # Generate manifests e.g. CRD, RBAC etc.
 .PHONY: manifests
-manifests: generate $(YQ) $(KUSTOMIZE)
+manifests: generate $(KUSTOMIZE)
 	$(KUSTOMIZE) build config/default -o $(TMP_DIR)/
 	ls $(TMP_DIR)
 
