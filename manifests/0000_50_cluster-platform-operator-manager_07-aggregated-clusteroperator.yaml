@@ -7,7 +7,6 @@ metadata:
     include.release.openshift.io/single-node-developer: "true"
     release.openshift.io/feature-set: TechPreviewNoUpgrade
   name: platform-operators-aggregated
-  namespace: openshift-platform-operators
 spec: {}
 status:
   relatedObjects:
