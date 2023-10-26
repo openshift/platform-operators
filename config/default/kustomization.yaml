@@ -28,13 +28,6 @@ images:
   newName: quay.io/openshift/origin-cluster-platform-operators-manager
   newTag: "4.12"
 
-bases:
-- ../rbac
-- ../manager
-- ../clusteroperator
-# [PROMETHEUS] To enable prometheus monitor, uncomment all sections with 'PROMETHEUS'.
-#- ../prometheus
-
 patches:
 # Protect the /metrics endpoint by putting it behind auth.
 # If you want your controller-manager to expose the /metrics
@@ -72,3 +65,10 @@ patches:
 # Mount the controller config file for loading manager configurations
 # through a ComponentConfig type
 #- manager_config_patch.yaml
+
+resources:
+- ../rbac
+- ../manager
+- ../clusteroperator
+# [PROMETHEUS] To enable prometheus monitor, uncomment all sections with 'PROMETHEUS'.
+#- ../prometheus
