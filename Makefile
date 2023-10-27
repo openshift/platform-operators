@@ -74,21 +74,21 @@ manifests: generate $(KUSTOMIZE)
 	rm manifests/*.yaml || true
 
 	@# Move the vendored PlatformOperator CRD from o/api to the manifests folder
-	cp $(ROOT_DIR)/vendor/github.com/openshift/api/platform/v1alpha1/platformoperators.crd.yaml manifests/0000_50_cluster-platform-operator-manager_00-platformoperator.crd.yaml
+	cp $(ROOT_DIR)/vendor/github.com/openshift/api/platform/v1alpha1/platformoperators.crd.yaml manifests/00-platformoperator.crd.yaml
 
 	@# Move all of the platform operators manifests into the manifests folder
-	$(MV_TMP_DIR)/v1_namespace_openshift-platform-operators.yaml manifests/0000_50_cluster-platform-operator-manager_00-namespace.yaml
-	$(MV_TMP_DIR)/v1_serviceaccount_platform-operators-controller-manager.yaml manifests/0000_50_cluster-platform-operator-manager_01-serviceaccount.yaml
-	$(MV_TMP_DIR)/v1_service_platform-operators-controller-manager-metrics-service.yaml manifests/0000_50_cluster-platform-operator-manager_02-metricsservice.yaml
-	$(MV_TMP_DIR)/apps_v1_deployment_platform-operators-controller-manager.yaml manifests/0000_50_cluster-platform-operator-manager_06-deployment.yaml
-	$(MV_TMP_DIR)/config.openshift.io_v1_clusteroperator_platform-operators-aggregated.yaml manifests/0000_50_cluster-platform-operator-manager_07-aggregated-clusteroperator.yaml
-	sed -i '/^  namespace:/d' manifests/0000_50_cluster-platform-operator-manager_07-aggregated-clusteroperator.yaml
+	$(MV_TMP_DIR)/v1_namespace_openshift-platform-operators.yaml manifests/00-namespace.yaml
+	$(MV_TMP_DIR)/v1_serviceaccount_platform-operators-controller-manager.yaml manifests/01-serviceaccount.yaml
+	$(MV_TMP_DIR)/v1_service_platform-operators-controller-manager-metrics-service.yaml manifests/02-metricsservice.yaml
+	$(MV_TMP_DIR)/apps_v1_deployment_platform-operators-controller-manager.yaml manifests/06-deployment.yaml
+	$(MV_TMP_DIR)/config.openshift.io_v1_clusteroperator_platform-operators-aggregated.yaml manifests/07-aggregated-clusteroperator.yaml
+	sed -i '/^  namespace:/d' manifests/07-aggregated-clusteroperator.yaml
 
 	@# cluster-platform-operator-manager rbacs
-	rm -f manifests/0000_50_cluster-platform-operator-manager_03_rbac.yaml
+	rm -f manifests/03_rbac.yaml
 	for rbac in $(RBAC_LIST); do \
-		cat $(TMP_DIR)/$${rbac} >> manifests/0000_50_cluster-platform-operator-manager_03_rbac.yaml ;\
-		echo '---' >> manifests/0000_50_cluster-platform-operator-manager_03_rbac.yaml ;\
+		cat $(TMP_DIR)/$${rbac} >> manifests/03_rbac.yaml ;\
+		echo '---' >> manifests/03_rbac.yaml ;\
 	done
 
 .PHONY: lint
