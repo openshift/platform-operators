@@ -1,4 +1,4 @@
-FROM registry.ci.openshift.org/ocp/builder:rhel-8-golang-1.20-openshift-4.15 AS builder
+FROM registry.ci.openshift.org/ocp/builder:rhel-9-golang-1.20-openshift-4.15 AS builder
 
 WORKDIR /build
 COPY .bingo .bingo
@@ -11,7 +11,7 @@ COPY internal internal
 COPY Makefile Makefile
 RUN make build
 
-FROM registry.ci.openshift.org/ocp/4.15:base
+FROM registry.ci.openshift.org/ocp/4.15:base-rhel9
 
 COPY manifests /manifests
 LABEL io.openshift.release.operator=true
