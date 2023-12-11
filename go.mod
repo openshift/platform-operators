@@ -1,6 +1,6 @@
 module github.com/openshift/platform-operators
 
-go 1.18
+go 1.21.5
 
 require (
 	github.com/blang/semver/v4 v4.0.0
