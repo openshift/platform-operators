@@ -6,7 +6,7 @@ import (
 	"os"
 
 	configv1 "github.com/openshift/api/config/v1"
-	rukpakv1alpha1 "github.com/operator-framework/rukpak/api/v1alpha1"
+	rukpakv1alpha2 "github.com/operator-framework/rukpak/api/v1alpha2"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -32,7 +32,7 @@ func PodNamespace(defaultNamespace string) string {
 }
 
 func RequeuePlatformOperators(cl client.Client) handler.MapFunc {
-	return func(object client.Object) []reconcile.Request {
+	return func(ctx context.Context, object client.Object) []reconcile.Request {
 		poList := &platformv1alpha1.PlatformOperatorList{}
 		if err := cl.List(context.Background(), poList); err != nil {
 			return nil
@@ -51,8 +51,8 @@ func RequeuePlatformOperators(cl client.Client) handler.MapFunc {
 }
 
 func RequeueBundleDeployment(c client.Client) handler.MapFunc {
-	return func(obj client.Object) []reconcile.Request {
-		bi := obj.(*rukpakv1alpha1.BundleDeployment)
+	return func(ctx context.Context, obj client.Object) []reconcile.Request {
+		bi := obj.(*rukpakv1alpha2.BundleDeployment)
 
 		poList := &platformv1alpha1.PlatformOperatorList{}
 		if err := c.List(context.Background(), poList); err != nil {
@@ -74,7 +74,7 @@ func RequeueBundleDeployment(c client.Client) handler.MapFunc {
 }
 
 func RequeueClusterOperator(c client.Client, name string) handler.MapFunc {
-	return func(obj client.Object) []reconcile.Request {
+	return func(ctx context.Context, obj client.Object) []reconcile.Request {
 		co := &configv1.ClusterOperator{}
 
 		if err := c.Get(context.Background(), types.NamespacedName{Name: name}, co); err != nil {
@@ -121,7 +121,7 @@ func buildPOFailureMessage(name, reason string) error {
 // successfully unpacked and persisted to the cluster. In the case that the
 // BD is reporting a successful status, a nil metav1.Condition will be returned.
 func InspectBundleDeployment(_ context.Context, conditions []metav1.Condition) *metav1.Condition {
-	unpacked := meta.FindStatusCondition(conditions, rukpakv1alpha1.TypeHasValidBundle)
+	unpacked := meta.FindStatusCondition(conditions, rukpakv1alpha2.TypeHasValidBundle)
 	if unpacked == nil {
 		return &metav1.Condition{
 			Type:    platformtypes.TypeInstalled,
@@ -139,7 +139,7 @@ func InspectBundleDeployment(_ context.Context, conditions []metav1.Condition) *
 		}
 	}
 
-	installed := meta.FindStatusCondition(conditions, rukpakv1alpha1.TypeInstalled)
+	installed := meta.FindStatusCondition(conditions, rukpakv1alpha2.TypeInstalled)
 	if installed == nil {
 		return &metav1.Condition{
 			Type:    platformtypes.TypeInstalled,

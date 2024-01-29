@@ -2,11 +2,10 @@ package e2e
 
 import (
 	"context"
-	"fmt"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	rukpakv1alpha1 "github.com/operator-framework/rukpak/api/v1alpha1"
+	rukpakv1alpha2 "github.com/operator-framework/rukpak/api/v1alpha2"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -47,43 +46,31 @@ var _ = Describe("platform operators controller", func() {
 		})
 		It("should generate a Bundle Deployment with a metadata.Name that matches the platformoperator's metadata.Name", func() {
 			Eventually(func() error {
-				bi := &rukpakv1alpha1.BundleDeployment{}
+				bi := &rukpakv1alpha2.BundleDeployment{}
 				return c.Get(ctx, types.NamespacedName{Name: po.GetName()}, bi)
 			}).Should(Succeed())
 		})
-		It("should generate a Bundle Deployment that contains the different unique provisioner ID", func() {
-			Eventually(func() bool {
-				bi := &rukpakv1alpha1.BundleDeployment{}
-				if err := c.Get(ctx, types.NamespacedName{Name: po.GetName()}, bi); err != nil {
-					return false
-				}
-				return bi.Spec.Template.Spec.ProvisionerClassName != bi.Spec.ProvisionerClassName
-			}).Should(BeTrue())
-		})
 		It("should choose the right registry+v1 bundle image", func() {
 			Eventually(func() string {
-				bi := &rukpakv1alpha1.BundleDeployment{}
+				bi := &rukpakv1alpha2.BundleDeployment{}
 				if err := c.Get(ctx, types.NamespacedName{Name: po.GetName()}, bi); err != nil {
 					return ""
 				}
-				return bi.Spec.Template.Spec.Source.Image.Ref
+				return bi.Spec.Source.Image.Ref
 			}).Should(ContainSubstring("registry.redhat.io/cert-manager/cert-manager-operator-bundle"))
 		})
 		It("should result in a successful BD status", func() {
 			Eventually(func() (*metav1.Condition, error) {
-				bi := &rukpakv1alpha1.BundleDeployment{}
+				bi := &rukpakv1alpha2.BundleDeployment{}
 				if err := c.Get(ctx, types.NamespacedName{Name: po.GetName()}, bi); err != nil {
 					return nil, err
 				}
-				if bi.Status.ActiveBundle == "" {
-					return nil, fmt.Errorf("waiting for bundle name to be populated")
-				}
-				return meta.FindStatusCondition(bi.Status.Conditions, rukpakv1alpha1.TypeInstalled), nil
+				return meta.FindStatusCondition(bi.Status.Conditions, rukpakv1alpha2.TypeInstalled), nil
 			}).Should(And(
 				Not(BeNil()),
-				WithTransform(func(c *metav1.Condition) string { return c.Type }, Equal(rukpakv1alpha1.TypeInstalled)),
+				WithTransform(func(c *metav1.Condition) string { return c.Type }, Equal(rukpakv1alpha2.TypeInstalled)),
 				WithTransform(func(c *metav1.Condition) metav1.ConditionStatus { return c.Status }, Equal(metav1.ConditionTrue)),
-				WithTransform(func(c *metav1.Condition) string { return c.Reason }, Equal(rukpakv1alpha1.ReasonInstallationSucceeded)),
+				WithTransform(func(c *metav1.Condition) string { return c.Reason }, Equal(rukpakv1alpha2.ReasonInstallationSucceeded)),
 				WithTransform(func(c *metav1.Condition) string { return c.Message }, ContainSubstring("instantiated bundle")),
 			))
 		})
@@ -114,21 +101,21 @@ var _ = Describe("platform operators controller", func() {
 		// See https://github.com/openshift/platform-operators/issues/47 for more details.
 		It("the underlying BD has been modified", func() {
 			Eventually(func() error {
-				bi := &rukpakv1alpha1.BundleDeployment{}
+				bi := &rukpakv1alpha2.BundleDeployment{}
 				if err := c.Get(ctx, types.NamespacedName{Name: po.GetName()}, bi); err != nil {
 					return err
 				}
-				bi.Spec.Template.Spec.Source.Image.Ref = "quay.io/openshift/origin-cluster-platform-operators-manager:latest"
+				bi.Spec.Source.Image.Ref = "quay.io/openshift/origin-cluster-platform-operators-manager:latest"
 
 				return c.Update(ctx, bi)
 			}).Should(Succeed())
 
 			Consistently(func() bool {
-				bi := &rukpakv1alpha1.BundleDeployment{}
+				bi := &rukpakv1alpha2.BundleDeployment{}
 				if err := c.Get(ctx, types.NamespacedName{Name: po.GetName()}, bi); err != nil {
 					return false
 				}
-				return bi.Spec.Template.Spec.Source.Image.Ref == "quay.io/openshift/origin-cluster-platform-operators-manager:latest"
+				return bi.Spec.Source.Image.Ref == "quay.io/openshift/origin-cluster-platform-operators-manager:latest"
 			}).Should(BeTrue())
 		})
 	})
@@ -201,7 +188,7 @@ var _ = Describe("platform operators controller", func() {
 				Not(BeNil()),
 				WithTransform(func(c *metav1.Condition) string { return c.Type }, Equal(platformtypes.TypeInstalled)),
 				WithTransform(func(c *metav1.Condition) metav1.ConditionStatus { return c.Status }, Equal(metav1.ConditionFalse)),
-				WithTransform(func(c *metav1.Condition) string { return c.Reason }, Equal(rukpakv1alpha1.ReasonUnpackFailed)),
+				WithTransform(func(c *metav1.Condition) string { return c.Reason }, Equal(rukpakv1alpha2.ReasonUnpackFailed)),
 				WithTransform(func(c *metav1.Condition) string { return c.Message }, ContainSubstring("convert registry+v1 bundle to plain+v0 bundle: AllNamespace install mode must be enabled")),
 			))
 		})

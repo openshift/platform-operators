@@ -16,6 +16,10 @@ import (
 	"github.com/operator-framework/operator-registry/alpha/property"
 )
 
+type Deprecation struct {
+	Message string `json:"message"`
+}
+
 func init() {
 	t := types.NewType("svg", "image/svg+xml")
 	filetype.AddMatcher(t, svg.Is)
@@ -44,6 +48,7 @@ type Package struct {
 	Icon           *Icon
 	DefaultChannel *Channel
 	Channels       map[string]*Channel
+	Deprecation    *Deprecation
 }
 
 func (m *Package) Validate() error {
@@ -84,12 +89,17 @@ func (m *Package) Validate() error {
 	if m.DefaultChannel != nil && !foundDefault {
 		result.subErrors = append(result.subErrors, fmt.Errorf("default channel %q not found in channels list", m.DefaultChannel.Name))
 	}
+
+	if err := m.Deprecation.Validate(); err != nil {
+		result.subErrors = append(result.subErrors, fmt.Errorf("invalid deprecation: %v", err))
+	}
+
 	return result.orNil()
 }
 
 type Icon struct {
-	Data      []byte
-	MediaType string
+	Data      []byte `json:"base64data"`
+	MediaType string `json:"mediatype"`
 }
 
 func (i *Icon) Validate() error {
@@ -131,14 +141,20 @@ func (i *Icon) validateData() error {
 }
 
 type Channel struct {
-	Package *Package
-	Name    string
-	Bundles map[string]*Bundle
+	Package     *Package
+	Name        string
+	Bundles     map[string]*Bundle
+	Deprecation *Deprecation
+	// NOTICE: The field Properties of the type Channel is for internal use only.
+	//   DO NOT use it for any public-facing functionalities.
+	//   This API is in alpha stage and it is subject to change.
+	Properties []property.Property
 }
 
 // TODO(joelanford): This function determines the channel head by finding the bundle that has 0
-//   incoming edges, based on replaces and skips. It also expects to find exactly one such bundle.
-//   Is this the correct algorithm?
+//
+//	incoming edges, based on replaces and skips. It also expects to find exactly one such bundle.
+//	Is this the correct algorithm?
 func (c Channel) Head() (*Bundle, error) {
 	incoming := map[string]int{}
 	for _, b := range c.Bundles {
@@ -201,16 +217,21 @@ func (c *Channel) Validate() error {
 			result.subErrors = append(result.subErrors, fmt.Errorf("bundle %q not correctly linked to parent channel", b.Name))
 		}
 	}
+
+	if err := c.Deprecation.Validate(); err != nil {
+		result.subErrors = append(result.subErrors, fmt.Errorf("invalid deprecation: %v", err))
+	}
+
 	return result.orNil()
 }
 
 // validateReplacesChain checks the replaces chain of a channel.
 // Specifically the following rules must be followed:
-// 1. There must be exactly 1 channel head.
-// 2. Beginning at the head, the replaces chain must reach all non-skipped entries.
-//    Non-skipped entries are defined as entries that are not skipped by any other entry in the channel.
-// 3. There must be no cycles in the replaces chain.
-// 4. The tail entry in the replaces chain is permitted to replace a non-existent entry.
+//  1. There must be exactly 1 channel head.
+//  2. Beginning at the head, the replaces chain must reach all non-skipped entries.
+//     Non-skipped entries are defined as entries that are not skipped by any other entry in the channel.
+//  3. There must be no cycles in the replaces chain.
+//  4. The tail entry in the replaces chain is permitted to replace a non-existent entry.
 func (c *Channel) validateReplacesChain() error {
 	head, err := c.Head()
 	if err != nil {
@@ -259,6 +280,7 @@ type Bundle struct {
 	SkipRange     string
 	Properties    []property.Property
 	RelatedImages []RelatedImage
+	Deprecation   *Deprecation
 
 	// These fields are present so that we can continue serving
 	// the GRPC API the way packageserver expects us to in a
@@ -311,6 +333,10 @@ func (b *Bundle) Validate() error {
 
 	if b.Image == "" && len(b.Objects) == 0 {
 		result.subErrors = append(result.subErrors, errors.New("bundle image must be set"))
+	}
+
+	if err := b.Deprecation.Validate(); err != nil {
+		result.subErrors = append(result.subErrors, fmt.Errorf("invalid deprecation: %v", err))
 	}
 
 	return result.orNil()
@@ -368,4 +394,14 @@ func (m Model) AddBundle(b Bundle) {
 	if p.DefaultChannel == nil {
 		p.DefaultChannel = b.Channel
 	}
+}
+
+func (d *Deprecation) Validate() error {
+	if d == nil {
+		return nil
+	}
+	if d.Message == "" {
+		return errors.New("message must be set")
+	}
+	return nil
 }

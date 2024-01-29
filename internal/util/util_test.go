@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	rukpakv1alpha1 "github.com/operator-framework/rukpak/api/v1alpha1"
+	rukpakv1alpha2 "github.com/operator-framework/rukpak/api/v1alpha2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	platformv1alpha1 "github.com/openshift/api/platform/v1alpha1"
@@ -119,14 +119,14 @@ func TestInspectBundleDeployment(t *testing.T) {
 			name: "InstallSucceeded",
 			conditions: []metav1.Condition{
 				{
-					Type:   rukpakv1alpha1.TypeHasValidBundle,
+					Type:   rukpakv1alpha2.TypeHasValidBundle,
 					Status: metav1.ConditionTrue,
-					Reason: rukpakv1alpha1.ReasonUnpackSuccessful,
+					Reason: rukpakv1alpha2.ReasonUnpackSuccessful,
 				},
 				{
-					Type:   rukpakv1alpha1.TypeInstalled,
+					Type:   rukpakv1alpha2.TypeInstalled,
 					Status: metav1.ConditionTrue,
-					Reason: rukpakv1alpha1.ReasonInstallationSucceeded,
+					Reason: rukpakv1alpha2.ReasonInstallationSucceeded,
 				},
 			},
 			want: nil,
@@ -135,14 +135,14 @@ func TestInspectBundleDeployment(t *testing.T) {
 			name: "InstalledWrongReason",
 			conditions: []metav1.Condition{
 				{
-					Type:   rukpakv1alpha1.TypeHasValidBundle,
+					Type:   rukpakv1alpha2.TypeHasValidBundle,
 					Status: metav1.ConditionTrue,
-					Reason: rukpakv1alpha1.ReasonUnpackSuccessful,
+					Reason: rukpakv1alpha2.ReasonUnpackSuccessful,
 				},
 				{
-					Type:   rukpakv1alpha1.TypeInstalled,
+					Type:   rukpakv1alpha2.TypeInstalled,
 					Status: metav1.ConditionTrue,
-					Reason: rukpakv1alpha1.ReasonErrorGettingClient,
+					Reason: rukpakv1alpha2.ReasonErrorGettingClient,
 				},
 			},
 			want: nil,
@@ -151,34 +151,34 @@ func TestInspectBundleDeployment(t *testing.T) {
 			name: "InstallFailed",
 			conditions: []metav1.Condition{
 				{
-					Type:   rukpakv1alpha1.TypeHasValidBundle,
+					Type:   rukpakv1alpha2.TypeHasValidBundle,
 					Status: metav1.ConditionTrue,
-					Reason: rukpakv1alpha1.ReasonUnpackSuccessful,
+					Reason: rukpakv1alpha2.ReasonUnpackSuccessful,
 				},
 				{
-					Type:   rukpakv1alpha1.TypeInstalled,
+					Type:   rukpakv1alpha2.TypeInstalled,
 					Status: metav1.ConditionFalse,
-					Reason: rukpakv1alpha1.ReasonInstallFailed,
+					Reason: rukpakv1alpha2.ReasonInstallFailed,
 				},
 			},
 			want: &metav1.Condition{
 				Type:   platformtypes.TypeInstalled,
 				Status: metav1.ConditionFalse,
-				Reason: rukpakv1alpha1.ReasonInstallFailed,
+				Reason: rukpakv1alpha2.ReasonInstallFailed,
 			},
 		},
 		{
 			name: "UnpackedButNotInstalled",
 			conditions: []metav1.Condition{
 				{
-					Type:   rukpakv1alpha1.TypeHasValidBundle,
+					Type:   rukpakv1alpha2.TypeHasValidBundle,
 					Status: metav1.ConditionTrue,
-					Reason: rukpakv1alpha1.ReasonUnpackSuccessful,
+					Reason: rukpakv1alpha2.ReasonUnpackSuccessful,
 				},
 				{
 					Type:   "stub",
 					Status: metav1.ConditionFalse,
-					Reason: rukpakv1alpha1.ReasonInstallFailed,
+					Reason: rukpakv1alpha2.ReasonInstallFailed,
 				},
 			},
 			want: &metav1.Condition{
@@ -193,7 +193,7 @@ func TestInspectBundleDeployment(t *testing.T) {
 				{
 					Type:   "stub",
 					Status: metav1.ConditionFalse,
-					Reason: rukpakv1alpha1.ReasonInstallFailed,
+					Reason: rukpakv1alpha2.ReasonInstallFailed,
 				},
 			},
 			want: &metav1.Condition{
@@ -207,15 +207,15 @@ func TestInspectBundleDeployment(t *testing.T) {
 			name: "UnpackFailed",
 			conditions: []metav1.Condition{
 				{
-					Type:   rukpakv1alpha1.TypeHasValidBundle,
+					Type:   rukpakv1alpha2.TypeHasValidBundle,
 					Status: metav1.ConditionFalse,
-					Reason: rukpakv1alpha1.ReasonUnpackPending,
+					Reason: rukpakv1alpha2.ReasonUnpackPending,
 				},
 			},
 			want: &metav1.Condition{
 				Type:   platformtypes.TypeInstalled,
 				Status: metav1.ConditionFalse,
-				Reason: rukpakv1alpha1.ReasonUnpackPending,
+				Reason: rukpakv1alpha2.ReasonUnpackPending,
 			},
 		},
 	}
