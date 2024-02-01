@@ -22,7 +22,7 @@ import (
 	"fmt"
 
 	operatorsv1alpha1 "github.com/operator-framework/api/pkg/operators/v1alpha1"
-	rukpakv1alpha1 "github.com/operator-framework/rukpak/api/v1alpha1"
+	rukpakv1alpha2 "github.com/operator-framework/rukpak/api/v1alpha2"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -31,7 +31,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	logr "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	platformv1alpha1 "github.com/openshift/api/platform/v1alpha1"
 	platformtypes "github.com/openshift/platform-operators/api/v1alpha1"
@@ -119,8 +118,8 @@ func (r *PlatformOperatorReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	return ctrl.Result{}, nil
 }
 
-func (r *PlatformOperatorReconciler) ensureDesiredBundleDeployment(ctx context.Context, po *platformv1alpha1.PlatformOperator) (*rukpakv1alpha1.BundleDeployment, error) {
-	bd := &rukpakv1alpha1.BundleDeployment{}
+func (r *PlatformOperatorReconciler) ensureDesiredBundleDeployment(ctx context.Context, po *platformv1alpha1.PlatformOperator) (*rukpakv1alpha2.BundleDeployment, error) {
+	bd := &rukpakv1alpha2.BundleDeployment{}
 
 	// check whether the underlying BD has already been generated to determine
 	// whether the sourcing logic needs to be run to avoid performing unnecessary
@@ -148,7 +147,7 @@ func (r *PlatformOperatorReconciler) ensureDesiredBundleDeployment(ctx context.C
 func (r *PlatformOperatorReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&platformv1alpha1.PlatformOperator{}).
-		Watches(&source.Kind{Type: &operatorsv1alpha1.CatalogSource{}}, handler.EnqueueRequestsFromMapFunc(util.RequeuePlatformOperators(mgr.GetClient()))).
-		Watches(&source.Kind{Type: &rukpakv1alpha1.BundleDeployment{}}, handler.EnqueueRequestsFromMapFunc(util.RequeueBundleDeployment(mgr.GetClient()))).
+		Watches(&operatorsv1alpha1.CatalogSource{}, handler.EnqueueRequestsFromMapFunc(util.RequeuePlatformOperators(mgr.GetClient()))).
+		Watches(&rukpakv1alpha2.BundleDeployment{}, handler.EnqueueRequestsFromMapFunc(util.RequeueBundleDeployment(mgr.GetClient()))).
 		Complete(r)
 }

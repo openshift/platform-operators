@@ -25,7 +25,7 @@ import (
 	. "github.com/onsi/gomega"
 	configv1 "github.com/openshift/api/config/v1"
 	operatorsv1alpha1 "github.com/operator-framework/api/pkg/operators/v1alpha1"
-	rukpakv1alpha1 "github.com/operator-framework/rukpak/api/v1alpha1"
+	rukpakv1alpha2 "github.com/operator-framework/rukpak/api/v1alpha2"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
@@ -79,7 +79,7 @@ var _ = BeforeSuite(func() {
 	err = configv1.Install(scheme)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = rukpakv1alpha1.AddToScheme(scheme)
+	err = rukpakv1alpha2.AddToScheme(scheme)
 	Expect(err).To(BeNil())
 
 	err = operatorsv1alpha1.AddToScheme(scheme)
