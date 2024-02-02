@@ -1,14 +1,12 @@
 approvers:
-- awgreene
 - bparees
 - joelanford
-- ncdc
 - perdasilva
+- kevinrizza
 reviewers:
 - ankitathomas
-- awgreene
 - dtfranz
-- ncdc
 - perdasilva
 - tmshort
+- kevinrizza
 component: "OLM"
