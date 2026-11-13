@@ -5,7 +5,9 @@ ROOT_DIR := $(patsubst %/,%,$(dir $(realpath $(lastword $(MAKEFILE_LIST)))))
 # Image URL to use all building/pushing image targets
 IMG ?= controller:latest
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
-ENVTEST_K8S_VERSION = 1.22
+ENVTEST_K8S_VERSION = 1.24.2
+ENVTEST_ASSETS_DIR ?= /tmp/envtest-$(ENVTEST_K8S_VERSION)
+ENVTEST_ARCHIVE_URL = https://github.com/kubernetes-sigs/controller-tools/releases/download/envtest-v$(ENVTEST_K8S_VERSION)/envtest-v$(ENVTEST_K8S_VERSION)-linux-amd64.tar.gz
 BIN_DIR := bin
 CONTAINER_RUNTIME ?= docker
 KUBECTL ?= kubectl
@@ -99,10 +101,16 @@ lint: $(GOLANGCI_LINT)
 	GOLANGCI_LINT_CACHE=/tmp/golangci-cache $(GOLANGCI_LINT) run
 
 UNIT_TEST_DIRS=$(shell go list ./... | grep -v /test/)
-ENVTEST_OPTS ?= $(if $(OPENSHIFT_CI),--bin-dir=/tmp)
+
+.PHONY: envtest-binaries
+envtest-binaries: ## Download envtest binaries from controller-tools GitHub releases.
+	@mkdir -p $(ENVTEST_ASSETS_DIR)
+	@test -f $(ENVTEST_ASSETS_DIR)/kube-apiserver || \
+	  (curl -sSL $(ENVTEST_ARCHIVE_URL) | tar xz --strip-components=2 -C $(ENVTEST_ASSETS_DIR))
+
 .PHONY: unit
-unit: generate $(SETUP_ENVTEST) ## Run unit tests.
-	KUBEBUILDER_ASSETS="$(shell $(SETUP_ENVTEST) use $(ENVTEST_K8S_VERSION) $(ENVTEST_OPTS) -p path)" go test -count=1 -short $(UNIT_TEST_DIRS)
+unit: generate envtest-binaries ## Run unit tests.
+	KUBEBUILDER_ASSETS="$(ENVTEST_ASSETS_DIR)" go test -count=1 -short $(UNIT_TEST_DIRS)
 
 .PHONY: e2e
 e2e: deploy test-e2e
