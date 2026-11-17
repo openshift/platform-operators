@@ -5,7 +5,7 @@ ROOT_DIR := $(patsubst %/,%,$(dir $(realpath $(lastword $(MAKEFILE_LIST)))))
 # Image URL to use all building/pushing image targets
 IMG ?= controller:latest
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
-ENVTEST_K8S_VERSION = 1.22
+ENVTEST_K8S_VERSION = 1.28
 BIN_DIR := bin
 CONTAINER_RUNTIME ?= docker
 KUBECTL ?= kubectl
@@ -99,7 +99,7 @@ lint: $(GOLANGCI_LINT)
 	GOLANGCI_LINT_CACHE=/tmp/golangci-cache $(GOLANGCI_LINT) run
 
 UNIT_TEST_DIRS=$(shell go list ./... | grep -v /test/)
-ENVTEST_OPTS ?= $(if $(OPENSHIFT_CI),--bin-dir=/tmp)
+ENVTEST_OPTS ?= $(if $(OPENSHIFT_CI),--bin-dir=/tmp) --use-deprecated-gcs=false
 .PHONY: unit
 unit: generate $(SETUP_ENVTEST) ## Run unit tests.
 	KUBEBUILDER_ASSETS="$(shell $(SETUP_ENVTEST) use $(ENVTEST_K8S_VERSION) $(ENVTEST_OPTS) -p path)" go test -count=1 -short $(UNIT_TEST_DIRS)
