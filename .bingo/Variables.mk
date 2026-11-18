@@ -53,11 +53,11 @@ $(KUSTOMIZE): $(BINGO_DIR)/kustomize.mod
 	@echo "(re)installing $(GOBIN)/kustomize-v4.2.0"
 	@cd $(BINGO_DIR) && GOWORK=off $(GO) build -mod=mod -modfile=kustomize.mod -o=$(GOBIN)/kustomize-v4.2.0 "sigs.k8s.io/kustomize/kustomize/v4"
 
-SETUP_ENVTEST := $(GOBIN)/setup-envtest-v0.0.0-20230206014430-b9940edaaafe
+SETUP_ENVTEST := $(GOBIN)/setup-envtest-v0.0.0-20240531164907-7006f379adf2
 $(SETUP_ENVTEST): $(BINGO_DIR)/setup-envtest.mod
 	@# Install binary/ries using Go 1.14+ build command. This is using bwplotka/bingo-controlled, separate go module with pinned dependencies.
-	@echo "(re)installing $(GOBIN)/setup-envtest-v0.0.0-20230206014430-b9940edaaafe"
-	@cd $(BINGO_DIR) && GOWORK=off $(GO) build -mod=mod -modfile=setup-envtest.mod -o=$(GOBIN)/setup-envtest-v0.0.0-20230206014430-b9940edaaafe "sigs.k8s.io/controller-runtime/tools/setup-envtest"
+	@echo "(re)installing $(GOBIN)/setup-envtest-v0.0.0-20240531164907-7006f379adf2"
+	@cd $(BINGO_DIR) && GOWORK=off $(GO) build -mod=mod -modfile=setup-envtest.mod -o=$(GOBIN)/setup-envtest-v0.0.0-20240531164907-7006f379adf2 "sigs.k8s.io/controller-runtime/tools/setup-envtest"
 
 YQ := $(GOBIN)/yq-v4.30.8
 $(YQ): $(BINGO_DIR)/yq.mod
